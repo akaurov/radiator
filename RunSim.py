@@ -1,10 +1,13 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from rstat.figurestyle import *
-from rstat.crossections import sigmaH
-
+# from rstat.figurestyle import *
+# from rstat.crossections import sigmaH
 # define_figure_style()
 # http://arxiv.org/pdf/0807.1969.pdf
+
+
+from radiator.crosssections import *
+
 sigmaT = 6.6524e-25 #cm^2
 me = 9.109e-28 # g
 c = 2.9979e10 # cm/s
@@ -25,28 +28,30 @@ def sigmakn(Eg, e, gamma):
     return 3.0*sigmaT/4.0/e/gamma**2*G
 
 
+DM_spec_phot = np.loadtxt('radiator/datafiles/DM-e.txt')
+DM_spec_p = np.loadtxt('radiator/datafiles/DM-p.txt')
+
 Eg_list = np.logspace(-2, 12, 1000)/6.24e11
 temp = np.zeros([len(Eg_list), 4])
 EgeV_list = Eg_list*6.24e11
 
-
 from scipy.interpolate import InterpolatedUnivariateSpline
 
-
-crossections = np.loadtxt('crossdata.dat')
-crossectionsHe = np.loadtxt('crossdataHe.dat')
-crossectionsO = np.loadtxt('crossdataO.dat')
-crossectionsHe2 = np.loadtxt('photoionHe.dat')
+crossections = np.loadtxt('radiator/datafiles/crossdata.dat')
+crossectionsHe = np.loadtxt('radiator/datafiles/crossdataHe.dat')
+crossectionsO = np.loadtxt('radiator/datafiles/crossdataO.dat')
+crossectionsHe2 = np.loadtxt('radiator/datafiles/photoionHe.dat')
 s = InterpolatedUnivariateSpline(np.log10(crossections[:,0]), np.log10(crossections[:,-1]), k=1)
 factor = 10**s(np.log10(EgeV_list/1e6))
-plt.plot(EgeV_list, factor*1e-24, '-', lw=1)
+plt.plot(EgeV_list, factor*1e-24, '-', lw=1, label='H cross total')
 s = InterpolatedUnivariateSpline(np.log10(crossectionsO[:,0]), np.log10(crossectionsO[:,-1]), k=1)
 factor = 10**s(np.log10(EgeV_list/1e6))
-plt.plot(EgeV_list, factor*1e-24, '-', lw=1)
-plt.plot(EgeV_list, sigmaX(EgeV_list, 1, 1)*1e-18)
-plt.plot(EgeV_list, sigmaX(EgeV_list, 8, 8)*1e-18)
+plt.plot(EgeV_list, factor*1e-24, '-', lw=1, label='O cross total')
+plt.plot(EgeV_list, sigmaX(EgeV_list, 1, 1)*1e-18, label='H phot 1996')
+plt.plot(EgeV_list, sigmaX(EgeV_list, 8, 8)*1e-18, label='O phot 1996')
 plt.xscale('log')
 plt.yscale('log')
+plt.legend()
 
 plt.plot(EgeV_list, sigmaX(EgeV_list, 1, 1) / sigmaX(EgeV_list, 8, 8))
 plt.xscale('log')
