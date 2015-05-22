@@ -124,71 +124,78 @@ Eg_list = np.logspace(-6, 12, 1000)/6.24e11
 nu_list = Eg_list / (hbar*2*np.pi)
 EgeV_list = Eg_list*6.24e11
 
-z = 0.0
-T_CMB = 2.7*(1.0+z)
-nb = (1.0+z)**3*2.2e-7
-# T_list=np.array([1000])
-
-photons = np.zeros(len(Eg_list))
-# photons[np.where(np.abs(Eg_list-T_CMB/11500) == np.abs(Eg_list-T_CMB/11500).min())[0][0]] = 511
-CMBphotons = 8*np.pi*2*np.pi*hbar*nu_list**3/c**3/(np.exp(2.0*np.pi*hbar*nu_list/kB/T_CMB)-1.0)/Eg_list/(hbar*2*np.pi)
-print 'number of photons per cm^3: ', np.trapz(CMBphotons, Eg_list)
-electrons = np.zeros(1)
-electrons[0] = 1e8 / 6.24e11
-# electrons /= np.trapz(electrons, Eg_list)
-# print 'number of electrons per cm^3: ', np.trapz(electrons, Eg_list)
-
-tau = 3.14e7*1e4
-photons_particles = np.zeros(len(Eg_list))
-
-# Do electrons-photons interactions
-for j in range(100000):
-    chances = np.random.random([len(electrons), 2])
-    for i in range(len(electrons)):
-        gamma = electrons[i] / (me*c**2)
-        sigma_IC = np.zeros(len(Eg_list))
-        for j1 in range(len(photons)):
-            sigma_temp = sigmakn(Eg_list, Eg_list[j1], gamma)
-            sigma_IC[j1] = np.trapz(sigma_temp, Eg_list)
-        sigma_IC_total = sigma_IC*CMBphotons*np.gradient(Eg_list)
-        probabilities = sigma_IC_total * c * tau
-        probabilities = np.cumsum(probabilities)
-        j1 = np.where(chances[i, 0] > probabilities)[0]
-        if len(j1)<len(probabilities):
-            j1 = j1[-1]
-            sigma_temp = sigmakn(Eg_list, Eg_list[j1], gamma)
-            sigma_temp = np.cumsum(sigma_temp)
-            sigma_temp /= sigma_temp.max()
-            # print j2
-            j2 = np.where(chances[i, 1] > sigma_temp)[0][-1]
-            photons_particles[j2] += 1
-            electrons[i] -= Eg_list[j2]
-    if j%100==0:
-        print electrons[0]
-
-
-plt.plot(EgeV_list, photons_particles*Eg_list**2)
-plt.xscale('log')
-plt.yscale('log')
-
-####################################
-
-z=100
-T_CMB=2.7*(1+z)
-CMBphotons = 8*np.pi*2*np.pi*hbar*nu_list**3/c**3/(np.exp(2.0*np.pi*hbar*nu_list/kB/T_CMB)-1.0)/Eg_list/(hbar*2*np.pi)
-plt.plot(EgeV_list, CMBphotons*Eg_list**2)
-z=10
-T_CMB=2.7*(1+z)
-CMBphotons = 8*np.pi*2*np.pi*hbar*nu_list**3/c**3/(np.exp(2.0*np.pi*hbar*nu_list/kB/T_CMB)-1.0)/Eg_list/(hbar*2*np.pi)
-plt.plot(EgeV_list, CMBphotons*Eg_list**2)
-plt.xscale('log')
-plt.yscale('log')
-
+# z = 0.0
+# T_CMB = 2.7*(1.0+z)
+# nb = (1.0+z)**3*2.2e-7
+# # T_list=np.array([1000])
+#
+# photons = np.zeros(len(Eg_list))
+# # photons[np.where(np.abs(Eg_list-T_CMB/11500) == np.abs(Eg_list-T_CMB/11500).min())[0][0]] = 511
+# CMBphotons = 8*np.pi*2*np.pi*hbar*nu_list**3/c**3/(np.exp(2.0*np.pi*hbar*nu_list/kB/T_CMB)-1.0)/Eg_list/(hbar*2*np.pi)
+# print 'number of photons per cm^3: ', np.trapz(CMBphotons, Eg_list)
+# electrons = np.zeros(1)
+# electrons[0] = 1e8 / 6.24e11
+# # electrons /= np.trapz(electrons, Eg_list)
+# # print 'number of electrons per cm^3: ', np.trapz(electrons, Eg_list)
+#
+# tau = 3.14e7*1e4
+# photons_particles = np.zeros(len(Eg_list))
+#
+# # Do electrons-photons interactions
+# for j in range(100000):
+#     chances = np.random.random([len(electrons), 2])
+#     for i in range(len(electrons)):
+#         gamma = electrons[i] / (me*c**2)
+#         sigma_IC = np.zeros(len(Eg_list))
+#         for j1 in range(len(photons)):
+#             sigma_temp = sigmakn(Eg_list, Eg_list[j1], gamma)
+#             sigma_IC[j1] = np.trapz(sigma_temp, Eg_list)
+#         sigma_IC_total = sigma_IC*CMBphotons*np.gradient(Eg_list)
+#         probabilities = sigma_IC_total * c * tau
+#         probabilities = np.cumsum(probabilities)
+#         j1 = np.where(chances[i, 0] > probabilities)[0]
+#         if len(j1)<len(probabilities):
+#             j1 = j1[-1]
+#             sigma_temp = sigmakn(Eg_list, Eg_list[j1], gamma)
+#             sigma_temp = np.cumsum(sigma_temp)
+#             sigma_temp /= sigma_temp.max()
+#             # print j2
+#             j2 = np.where(chances[i, 1] > sigma_temp)[0][-1]
+#             photons_particles[j2] += 1
+#             electrons[i] -= Eg_list[j2]
+#     if j%100==0:
+#         print electrons[0]
+#
+#
+# plt.plot(EgeV_list, photons_particles*Eg_list**2)
+# plt.xscale('log')
+# plt.yscale('log')
+#
 
 ####################################
 
+
+# z=100
+# T_CMB=2.7*(1+z)
+# CMBphotons = 8*np.pi*2*np.pi*hbar*nu_list**3/c**3/(np.exp(2.0*np.pi*hbar*nu_list/kB/T_CMB)-1.0)/Eg_list/(hbar*2*np.pi)
+# plt.plot(EgeV_list, CMBphotons*Eg_list**2)
+# z=10
+# T_CMB=2.7*(1+z)
+# CMBphotons = 8*np.pi*2*np.pi*hbar*nu_list**3/c**3/(np.exp(2.0*np.pi*hbar*nu_list/kB/T_CMB)-1.0)/Eg_list/(hbar*2*np.pi)
+# plt.plot(EgeV_list, CMBphotons*Eg_list**2)
+# plt.xscale('log')
+# plt.yscale('log')
+
+
+####################################
+
+Eg_list = np.logspace(-6, 12, 1000)/6.24e11
+nu_list = Eg_list / (hbar*2*np.pi)
+EgeV_list = Eg_list*6.24e11
+
 electrons = np.zeros(1)
-electrons[0] = 1e8 / 6.24e11
+E0 = 1e8
+electrons[0] = E0 / 6.24e11
 # electrons /= np.trapz(electrons, Eg_list)
 # print 'number of electrons per cm^3: ', np.trapz(electrons, Eg_list)
 z=100
@@ -197,7 +204,7 @@ T_CMB=2.7*(1+z)
 CMBphotons = 8*np.pi*2*np.pi*hbar*nu_list**3/c**3/(np.exp(2.0*np.pi*hbar*nu_list/kB/T_CMB)-1.0)/Eg_list/(hbar*2*np.pi)
 print 'number of photons per cm^3: ', np.trapz(CMBphotons, Eg_list)
 
-tau = 3.14e7*1e2
+tau = 3.14e7*1e1
 photons_particles = np.zeros(len(Eg_list))
 
 # Do electrons-photons interactions
@@ -206,7 +213,7 @@ for j in range(100):
     for i in range(len(electrons)):
         gamma = electrons[i] / (me*c**2)
         sigma_IC = np.zeros(len(Eg_list))
-        for j1 in range(len(photons)):
+        for j1 in range(len(Eg_list)):
             sigma_temp = sigmakn(Eg_list, Eg_list[j1], gamma) * np.gradient(Eg_list)
             # sigma_IC[j1] = np.trapz(sigma_temp, Eg_list)
             # sigma_IC_total = sigma_IC[j1]*CMBphotons[j1]*np.gradient(Eg_list)[j1]
@@ -245,7 +252,7 @@ def ICon30CMB(EgeV_list, E0, z):
     return (EgeV_list/1e9)**0.5*5e-2 *(np.exp(-(EgeV_list/1e9*3.4e3*(1e9/E0/((1.+z)/61)**0.5)**2)))
 
 plt.plot(EgeV_list, photons_particles/np.gradient(Eg_list)*Eg_list**2)
-plt.plot(EgeV_list, ICon30CMB(EgeV_list, 1e8, z))
+plt.plot(EgeV_list, ICon30CMB(EgeV_list, E0, z))
 plt.xscale('log')
 plt.yscale('log')
 
@@ -397,15 +404,15 @@ plt.yscale('log')
 
 #################################################################################################
 
-cosmo = Cosmology.setCosmology('planck1')
+# cosmo = Cosmology.setCosmology('planck1')
+def CLfit(z):
+    return 1.0+8e5*z**-1.4*np.exp(-(z/40)**2)
 
-z_list_ann = z_list.copy()
-boost_ann = 1+rho_dm_2[:]
-
+nb = 2.2e-7
 # Eg_list = np.logspace(-6, 12, 1000)/6.24e11
 nu_list = Eg_list / (hbar*2*np.pi)
 EgeV_list = Eg_list*6.24e11
-z_start = 10000.0
+z_start = 1000.0
 z_step = 0.01
 z_list = np.array([0])
 f = (Eg_list[1]/Eg_list[0])**1
@@ -414,18 +421,19 @@ for i in range(1000):
     z_list = np.append(z_list, f*(1.+z_list[-1])-1.0)
 z_list = z_list[z_list <= z_start]
 z_list = z_list[::-1]
-boost = np.interp(z_list, z_list_ann, boost_ann)
+#boost = np.interp(z_list, z_list_ann, boost_ann)
+boost = CLfit(z_list)
 
 import cosmolopy as cp
 age_list = cp.distance.age(z_list,**cp.fidcosmo)
 
 electrons = np.zeros(len(EgeV_list))
 electrons = EgeV_list / 6.24e11
-p2 = np.interp(EgeV_list, p[:,0]*1e9, p[:,1], left=0, right=0)
-phot2 = np.interp(EgeV_list, phot[:,0]*1e9, phot[:,1], left=0, right=0)
+p2 = np.interp(EgeV_list, DM_spec_p[:,0]*1e9, DM_spec_p[:,1], left=0, right=0)
+phot2 = np.interp(EgeV_list, DM_spec_phot[:,0]*1e9, DM_spec_phot[:,1], left=0, right=0)
 
-p2 = np.interp(EgeV_list, p[:,0]*1e9/4.0, p[:,1]/4.0, left=0, right=0)
-phot2 = np.interp(EgeV_list, phot[:,0]*1e9/4.0, phot[:,1]/4.0, left=0, right=0)
+# p2 = np.interp(EgeV_list, DM_spec_p[:,0]*1e9/4.0, DM_spec_p[:,1]/4.0, left=0, right=0)
+# phot2 = np.interp(EgeV_list, DM_spec_phot[:,0]*1e9/4.0, DM_spec_phot[:,1]/4.0, left=0, right=0)
 
 
 z = z_list[0]
@@ -437,21 +445,31 @@ tau = 3.14e7*1e2
 photons_particles = np.zeros(len(Eg_list))
 temp = 0
 
+
+
 Sigma_pair_prod = 10**np.interp(np.log10(EgeV_list/1e6), np.log10(crossections[:,0]), np.log10(crossections[:,4]+crossections[:,5]))*1e-24
 Sigma_pair_prod[np.isnan(Sigma_pair_prod)] = 0.0
 
-s = InterpolatedUnivariateSpline(np.log10(crossections[:,0]), np.log10(crossections[:,-1]), k=1)
-Sigma_photoion = 10**s(np.log10(EgeV_list/1e6))*1e-24
+# s = InterpolatedUnivariateSpline(np.log10(crossections[:,0]), np.log10(crossections[:,3]), k=1)
+# Sigma_photoion = 10**s(np.log10(EgeV_list/1e6))*1e-24
+Sigma_photoion = sigmaX(EgeV_list, 1, 1)*1e-18
 Sigma_photoion[np.isnan(Sigma_photoion)] = 0.0
+Sigma_photoion_He = sigmaX(EgeV_list, 2, 2)*1e-18
+Sigma_photoion_He[np.isnan(Sigma_photoion_He)] = 0.0
+Sigma_photoion_O = sigmaX(EgeV_list, 8, 8)*1e-18
+
+plt.plot(EgeV_list, Sigma_photoion)
+plt.plot(EgeV_list, Sigma_photoion_He)
+plt.plot(EgeV_list, Sigma_photoion_O)
+
+plt.xscale('log'); plt.yscale('log')
 
 Sigma_collisional_ion = 10**np.interp(np.log10(EgeV_list/1e6), np.log10(crossections[:,0]), np.log10(crossections[:,2]))*1e-24
 Sigma_collisional_ion[np.isnan(Sigma_collisional_ion)] = 0.0
 
-s = InterpolatedUnivariateSpline(np.log10(crossectionsHe[:,0]), np.log10(crossectionsHe[:,-1]), k=1)
-Sigma_photoion_He = 10**s(np.log10(EgeV_list/1e6))*1e-24
-Sigma_photoion_He[np.isnan(Sigma_photoion_He)] = 0.0
-
-Sigma_photoion_O = sigmaX(EgeV_list, 8, 8)*1e-18
+# s = InterpolatedUnivariateSpline(np.log10(crossectionsHe[:,0]), np.log10(crossectionsHe[:,-1]), k=1)
+# Sigma_photoion_He = 10**s(np.log10(EgeV_list/1e6))*1e-24
+# Sigma_photoion_He[np.isnan(Sigma_photoion_He)] = 0.0
 
 Sigma_collisional_ion_He = 10**np.interp(np.log10(EgeV_list/1e6), np.log10(crossectionsHe[:,0]), np.log10(crossectionsHe[:,2]))*1e-24
 Sigma_collisional_ion_He[np.isnan(Sigma_collisional_ion_He)] = 0.0
@@ -468,7 +486,7 @@ electronsN = np.zeros(len(EgeV_list))
 
 for ii in range(len(z_list)-1):
     # plt.clf()
-    # # plt.subplot(211)
+    # plt.subplot(211)
     # plt.plot(EgeV_list, photons_particles/np.gradient(Eg_list)*Eg_list**2,'-')
     # plt.plot(EgeV_list, electronsN/np.gradient(Eg_list)*Eg_list**2,'--')
     # plt.ylim([1e15,1e22])
@@ -490,14 +508,14 @@ for ii in range(len(z_list)-1):
     CMBphotons = 8*np.pi*2*np.pi*hbar*nu_list**3/c**3/(np.exp(2.0*np.pi*hbar*nu_list/kB/T_CMB)-1.0)/Eg_list/(hbar*2*np.pi)
     # add sources
     photons_particles += (phot2/(EgeV_list/1e9)**2*np.gradient(EgeV_list/1e9))*boost[ii]*(1.0+z)**3*tau
-    electronsN = 2*(p2/(EgeV_list/1e9)**2*np.gradient(EgeV_list/1e9))*boost[ii]*(1.0+z)**3*tau
+    electronsN += 2*(p2/(EgeV_list/1e9)**2*np.gradient(EgeV_list/1e9))*boost[ii]*(1.0+z)**3*tau
     n_ion[ii,9] = (1.0+z)**3*tau*boost[ii]
     # add IC photons
     for i in range(len(electrons)):
         photons_particles += electronsN[i] * ICon30CMB(EgeV_list, electrons[i]*6.24e11, z) * np.gradient(Eg_list) / Eg_list**2
     electronsN *= 0
     # column density
-    N_naked = 2.2e-7*c*tau*(1+z)**3
+    N_naked = nb*c*tau*(1+z)**3
     N_H = N_naked*0.76
     N_He = N_naked*0.23/4
     N_O = N_naked*0.01/8
@@ -507,7 +525,7 @@ for ii in range(len(z_list)-1):
     temp = photons_particles * temp_factor
     photons_particles -= temp
     electronsN[:-double_shift] += temp[double_shift:]*2
-        # photoion
+    # photoion
     temp_factor_H = (Sigma_photoion*N_H)
     temp_factor_He = (Sigma_photoion_He*N_He)
     temp_factor_O = (Sigma_photoion_O*N_O)
@@ -524,6 +542,7 @@ for ii in range(len(z_list)-1):
     n_ion[ii, 0] += np.sum(photons_particles * temp_factor_H)
     n_ion[ii, 4] += np.sum(photons_particles * temp_factor_He)
     n_ion[ii, 8] += np.sum(photons_particles * temp_factor_O)
+    electronsN += temp
     # plt.subplot(212)
     # plt.plot(EgeV_list, temp_factor_H, '-', lw=2)
     # plt.plot(EgeV_list, temp_factor_He, '-', lw=1)
@@ -553,20 +572,13 @@ plt.xscale('log')
 plt.yscale('log')
 
 sigmav = 2.16e-26
-mx = 4e9
-nb = 2.2e-7
+mx = 40e9
 
-Factor = ((cosmo.matterDensity(0.0) / Cosmology.AST_kpc**3 * Cosmology.AST_Msun) / (mx * 1.783e-33)) ** 2 * sigmav
+MatterDensityInGramsPerComovingCm = 5.7687745605587125e-30
+
+Factor = (MatterDensityInGramsPerComovingCm / (mx * 1.783e-33)) ** 2 * sigmav
 plt.plot(z_list, np.cumsum(n_ion[:, 0]+n_ion[:, 1])*Factor/(nb*0.76))
-# plt.xscale('log')
-# plt.yscale('log')
-
-Factor = ((cosmo.matterDensity(0.0) / Cosmology.AST_kpc**3 * Cosmology.AST_Msun) / (mx * 1.783e-33)) ** 2 * sigmav
 plt.plot(z_list, np.cumsum(n_ion[:, 4]+n_ion[:, 5])*Factor/(nb*0.23/4))
-# plt.xscale('log')
-# plt.yscale('log')
-
-Factor = ((cosmo.matterDensity(0.0) / Cosmology.AST_kpc**3 * Cosmology.AST_Msun) / (mx * 1.783e-33)) ** 2 * sigmav
 plt.plot(z_list, np.cumsum(n_ion[:, 8])*Factor/(nb*0.01/8))
 plt.xscale('log')
 plt.yscale('log')
@@ -579,4 +591,6 @@ plt.plot(EgeV_list, photons_particles/np.gradient(Eg_list)*Eg_list**2,'-')
 plt.plot(EgeV_list, electronsN/np.gradient(Eg_list)*Eg_list**2,'--')
 plt.xscale('log')
 plt.yscale('log')
+
+############# Mimic Cirelli
 
