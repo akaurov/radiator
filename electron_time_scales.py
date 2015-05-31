@@ -1,7 +1,8 @@
 __author__ = 'kaurov'
+import numpy as np
 
 # Furl 2010
-def t_cool(E,z,xi=0):
+def t_coll(E,z,xi=0):
     return 5e5*(1-xi)**-1*(E/1000.)**1.5*((1.+z)/10.)**-3*3.14e7
 
 # Furl 2010
@@ -20,7 +21,7 @@ nu_list = Eg_list / (hbar*2*np.pi)
 EgeV_list = Eg_list*6.24e11
 
 electrons = np.zeros(1)
-E0 = 1e3
+E0 = 1e8
 electrons[0] = E0 / 6.24e11
 # electrons /= np.trapz(electrons, Eg_list)
 # print 'number of electrons per cm^3: ', np.trapz(electrons, Eg_list)
@@ -30,7 +31,7 @@ T_CMB=2.7*(1+z)
 CMBphotons = 8*np.pi*2*np.pi*hbar*nu_list**3/c**3/(np.exp(2.0*np.pi*hbar*nu_list/kB/T_CMB)-1.0)/Eg_list/(hbar*2*np.pi)
 print 'number of photons per cm^3: ', np.trapz(CMBphotons, Eg_list)
 
-tau = 3.14e7*1e5
+tau = 3.14e7*1e-5
 T_tau=0
 
 photons_particles = np.zeros(len(Eg_list))
@@ -39,9 +40,10 @@ coll_ion_N = 0
 coll_ion = 0
 coll_loss = 0
 coll_ex = 0
+IC_total = 0
 # Do electrons-photons interactions
 for j in range(100):
-    chances = np.random.random([len(electrons), 2])
+    # chances = np.random.random([len(electrons), 2])
     for i in range(len(electrons)):
         gamma = electrons[i] / (me*c**2)
         sigma_IC = np.zeros(len(Eg_list))
@@ -71,32 +73,36 @@ for j in range(100):
             # photons_particles[j2] += 1
             # electrons[i] -= Eg_list[j2]
         xi = 0.01
-        tau_cool = t_cool(electrons[i]*6.24e11,z,xi)
+        tau_coll = t_coll(electrons[i]*6.24e11,z,xi)
         tau_loss_e = t_loss_e(electrons[i]*6.24e11,z,xi)
         tau_ex = 1./((1-xi)*nb)/sigmaHe(electrons[i])/c
         if total_probability > 0:
-            tau = electrons[i]/total_probability/25.0
+            tau_IC = electrons[i]/total_probability
         else:
             total_probability = 0
-            tau = 0
-            if electrons[i] > 13.6/6.24e11:
-                tau = np.min(np.array([tau_cool, tau_loss_e, tau_ex]))/25.0
-            else:
-                tau = np.min(np.array([tau_loss_e, tau_ex]))/25.0
-        T_tau += tau
-        electrons[i] -= total_probability*tau
-        coll_ion_N += 1.0*tau/tau_cool
+            tau_IC = 3.14e100
         if electrons[i] > 13.6/6.24e11:
-            coll_ion += 1.0*tau/tau_cool*electrons[i]
-            electrons[i] -= tau/tau_cool*electrons[i]
-        coll_loss += 1.0*tau/tau_loss_e*electrons[i]
-        electrons[i] -= tau/tau_loss_e*electrons[i]
-        coll_ex += 1.0*tau/tau_ex*electrons[i]
-        electrons[i] -= tau/tau_ex*electrons[i]
+            tau = np.min(np.array([tau_coll, tau_loss_e, tau_ex, tau_IC]))/20.0
+        else:
+            tau = np.min(np.array([tau_loss_e, tau_ex, tau_IC]))/20.0
+        T_tau += tau
+        e0z = electrons[i].copy()
+        electrons[i] -= total_probability*tau
+        IC_total += total_probability*tau
+        if electrons[i] > 13.6/6.24e11:
+            coll_ion += 1.0*tau/tau_coll*e0z
+            electrons[i] -= tau/tau_coll*e0z
+        # coll_loss += 1.0*tau/tau_loss_e*e0z
+        # electrons[i] -= tau/tau_loss_e*e0z
+        coll_ex += 1.0*tau/tau_ex*e0z
+        electrons[i] -= tau/tau_ex*e0z
         photons_particles += photons_particles_total_add*tau
-        print coll_ion / (coll_ion + coll_loss + coll_ex)
-        print coll_loss / (coll_ion + coll_loss + coll_ex)
-        print coll_ex / (coll_ion + coll_loss + coll_ex)
+        print T_tau/3.14e7
+        print electrons[i]/E0*6.24e11
+        print IC_total / (coll_ion + coll_loss + coll_ex + IC_total),
+        print coll_ion / (coll_ion + coll_loss + coll_ex + IC_total),
+        print coll_loss / (coll_ion + coll_loss + coll_ex + IC_total),
+        print coll_ex / (coll_ion + coll_loss + coll_ex + IC_total)
     # if j % 200 == 199:
         # plt.plot(EgeV_list, photons_particles/np.gradient(Eg_list)*Eg_list**2)
 
