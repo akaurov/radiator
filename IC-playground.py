@@ -44,11 +44,11 @@ electrons[0] = 1e8 / 6.24e11
 
 
 electrons = np.zeros(1)
-E00 = 1e9
+E00 = 1e10
 electrons[0] = E00 / 6.24e11
 # electrons /= np.trapz(electrons, Eg_list)
 # print 'number of electrons per cm^3: ', np.trapz(electrons, Eg_list)
-z=10
+z=100
 T_CMB=2.7*(1+z)
 
 CMBphotons = 8*np.pi*2*np.pi*hbar*nu_list**3/c**3/(np.exp(2.0*np.pi*hbar*nu_list/kB/T_CMB)-1.0)/Eg_list/(hbar*2*np.pi)
@@ -59,7 +59,7 @@ photons_particles = np.zeros(len(Eg_list))
 photons_particles_add = np.zeros(len(Eg_list))
 
 # Do electrons-photons interactions
-for j in range(1000):
+for j in range(200):
     chances = np.random.random([len(electrons), 2])
     for i in range(len(electrons)):
         if electrons[i]>10**5.42 / 6.24e11:
@@ -85,7 +85,7 @@ for j in range(1000):
                 # j2 = np.where(chances[i, 1] > sigma_temp)[0][-1]
                 # photons_particles[j2] += 1
                 # electrons[i] -= Eg_list[j2]
-            tau = electrons[i]/electrons_minus/100.0
+            tau = electrons[i]/electrons_minus/20.0
             photons_particles_add *= tau
             photons_particles += photons_particles_add
             electrons_minus *= tau
@@ -104,13 +104,14 @@ plt.yscale('log')
 
 
 def ICon30CMB(EgeV_list, E0, z):
-    return 4e-2 * (EgeV_list/1e9)**0.5 * \
+    return (1+z)**-0.5 * 4e-1 * (EgeV_list/1e9)**0.5 * \
            np.exp(\
-               -(EgeV_list/1e9)**1.25*5.4e3* \
+               -(EgeV_list/1e9)*2.4e3* \
                (1e9/E0)**2 / \
                ((1.+z)/61)**0.5 \
                )
 
 plt.plot(EgeV_list, ICon30CMB(EgeV_list, E00, z),'--')
+plt.ylim([1e-27,1])
 plt.xscale('log')
 plt.yscale('log')
