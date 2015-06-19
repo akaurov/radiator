@@ -71,7 +71,7 @@ T_CMB=2.7*(1+z)
 xi = 0.004
 
 
-Eg_list = np.logspace(-6, 12, 1000)/6.24e11
+Eg_list = np.logspace(-6, 12, 100)/6.24e11
 nu_list = Eg_list / (hbar*2*np.pi)
 EgeV_list = Eg_list*6.24e11
 
@@ -81,11 +81,11 @@ print 'number of photons per cm^3: ', np.trapz(CMBphotons, Eg_list)
 
 
 
-tau_list = np.zeros([len(E0_list), 10000]) * np.nan
-IC_total_list = np.zeros([len(E0_list), 10000])
-coll_ion_list = np.zeros([len(E0_list), 10000])
-coll_ex_list = np.zeros([len(E0_list), 10000])
-coll_loss_list = np.zeros([len(E0_list), 10000])
+# tau_list = np.zeros([len(E0_list), 10000]) * np.nan
+# IC_total_list = np.zeros([len(E0_list), 10000])
+# coll_ion_list = np.zeros([len(E0_list), 10000])
+# coll_ex_list = np.zeros([len(E0_list), 10000])
+# coll_loss_list = np.zeros([len(E0_list), 10000])
 
 tau = 3.14e7*1e-5
 T_tau=0
@@ -96,7 +96,8 @@ coll_loss = 0
 coll_ex = 0
 IC_total = 0
 # Do electrons-photons interactions
-E0_list = np.logspace(1, 5, 30)
+E0_list = np.logspace(1, 7, 30)
+# E0_list = np.array([1e6])
 results = np.zeros([len(E0_list), 10])
 MC_N_list = np.zeros([len(E0_list)])
 
@@ -132,27 +133,28 @@ for i_E in range(len(E0_list)):
                     sigma_IC = np.zeros(len(Eg_list))
                     total_probability = 0
                     photons_particles_total_add = 0
-                    # for j1 in range(len(Eg_list)):
-                    #     sigma_temp = sigmakn(Eg_list, Eg_list[j1], gamma) * np.gradient(Eg_list)
-                    #     temp = sigma_temp * c * CMBphotons[j1] * np.gradient(Eg_list)[j1]
-                    #     probability = np.sum(temp*Eg_list)
-                    #     total_probability += probability
-                    #     photons_particles_total_add += temp
+                    if electrons[i] > 1e4/6.24e11:
+                        for j1 in range(len(Eg_list)):
+                            sigma_temp = sigmakn(Eg_list, Eg_list[j1], gamma) * np.gradient(Eg_list)
+                            temp = sigma_temp * c * CMBphotons[j1] * np.gradient(Eg_list)[j1]
+                            probability = np.sum(temp*Eg_list)
+                            total_probability += probability
+                            photons_particles_total_add += temp
                     tau_coll = t_coll(electrons[i]*6.24e11, z, xi)
                     eedEdt_now = eedEdt(electrons[i], xi*nb*(1+z)**3)
                     tau_ex = (1-xi)*nb*(1+z)**3*sigmaHe(electrons[i])*v
                     # tau_loss_e = (xi)*nb*(1+z)**3*sigmaee(electrons[i], xi*nb*(1+z)**3)*v
-                    if total_probability > 0:
-                        tau_IC = electrons[i]/total_probability
-                    else:
-                        total_probability = 0
-                        tau_IC = 3.14e100
+                    # if total_probability > 0:
+                    #     tau_IC = electrons[i]/total_probability
+                    # else:
+                    #     total_probability = 0
+                    #     tau_IC = 3.14e100
                     if electrons[i] > 13.6/6.24e11:
-                        tau = 0.01/tau_ex
+                        tau = 0.1/tau_ex
                     T_tau += tau
                     e0z = electrons[i].copy()
-                    # electrons[i] -= total_probability*tau
-                    # IC_total += total_probability*tau
+                    electrons[i] -= total_probability*tau
+                    IC_total += total_probability*tau
 
                     rand_a = np.random.rand(2)
                     if rand_a[0] < (1.0 - np.exp(-tau_ex*tau)):
@@ -169,15 +171,16 @@ for i_E in range(len(E0_list)):
                     # photons_particles += photons_particles_total_add*tau
                     # tau_list[iii, j] = T_tau/3.14e7
                     # print i, j, electrons[i]/E0*6.24e11
-                    # print IC_total, coll_ion*6.24e11, coll_ex*6.24e11, coll_loss*6.24e11
+                    # print IC_total*6.24e11, coll_ion*6.24e11, coll_ex*6.24e11, coll_loss*6.24e11
                 else:
                     coll_loss += electrons[i]
                     electrons[i] = 0
             # print j
 
-    results[i_E,:4] = IC_total, coll_ion*6.24e11, coll_ex*6.24e11, coll_loss*6.24e11
+    results[i_E,:4] = IC_total*6.24e11, coll_ion*6.24e11, coll_ex*6.24e11, coll_loss*6.24e11
     print E0, results[i_E,:4]
 
+plt.plot(E0_list, results[:, 0]/E0_list/MC_N_list)
 plt.plot(E0_list, results[:, 1]/E0_list/MC_N_list)
 plt.plot(E0_list, results[:, 2]/E0_list/MC_N_list)
 plt.plot(E0_list, results[:, 3]/E0_list/MC_N_list)
