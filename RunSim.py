@@ -450,19 +450,11 @@ temp = 0
 Sigma_pair_prod = 10**np.interp(np.log10(EgeV_list/1e6), np.log10(crossections[:,0]), np.log10(crossections[:,4]+crossections[:,5]))*1e-24
 Sigma_pair_prod[np.isnan(Sigma_pair_prod)] = 0.0
 
-# s = InterpolatedUnivariateSpline(np.log10(crossections[:,0]), np.log10(crossections[:,3]), k=1)
-# Sigma_photoion = 10**s(np.log10(EgeV_list/1e6))*1e-24
 Sigma_photoion = sigmaX(EgeV_list, 1, 1)*1e-18
 Sigma_photoion[np.isnan(Sigma_photoion)] = 0.0
 Sigma_photoion_He = sigmaX(EgeV_list, 2, 2)*1e-18
 Sigma_photoion_He[np.isnan(Sigma_photoion_He)] = 0.0
 Sigma_photoion_O = sigmaX(EgeV_list, 8, 8)*1e-18
-
-plt.plot(EgeV_list, Sigma_photoion)
-plt.plot(EgeV_list, Sigma_photoion_He)
-plt.plot(EgeV_list, Sigma_photoion_O)
-
-plt.xscale('log'); plt.yscale('log')
 
 Sigma_collisional_ion = 10**np.interp(np.log10(EgeV_list/1e6), np.log10(crossections[:,0]), np.log10(crossections[:,2]))*1e-24
 Sigma_collisional_ion[np.isnan(Sigma_collisional_ion)] = 0.0
@@ -476,10 +468,6 @@ Sigma_collisional_ion_He[np.isnan(Sigma_collisional_ion_He)] = 0.0
 
 Sigma_collisional_scatter = 10**np.interp(np.log10(EgeV_list/1e6), np.log10(crossections[:,0]), np.log10(crossections[:,1]))*1e-24
 Sigma_collisional_scatter[np.isnan(Sigma_collisional_scatter)] = 0.0
-
-# s = InterpolatedUnivariateSpline(np.log10(crossectionsO[:,0]), np.log10(crossectionsO[:,-1]), k=1)
-# Sigma_photoion_O = 10**s(np.log10(EgeV_list/1e6))*1e-24
-# Sigma_photoion_O[np.isnan(Sigma_photoion_He)] = 0.0
 
 n_ion = np.zeros([len(z_list), 10])
 electronsN = np.zeros(len(EgeV_list))
@@ -502,8 +490,8 @@ for ii in range(len(z_list)-1):
     plt.title('z=%5.1f'%z)
     T_CMB = 2.7*(1+z)
     # redshift the system
-    photons_particles[:-1] = photons_particles[1:]
-    photons_particles[-1] = 0.
+    #photons_particles[:-1] = photons_particles[1:]
+    #photons_particles[-1] = 0.
     # update CMB
     CMBphotons = 8*np.pi*2*np.pi*hbar*nu_list**3/c**3/(np.exp(2.0*np.pi*hbar*nu_list/kB/T_CMB)-1.0)/Eg_list/(hbar*2*np.pi)
     # add sources
@@ -512,7 +500,12 @@ for ii in range(len(z_list)-1):
     n_ion[ii,9] = (1.0+z)**3*tau*boost[ii]
     # add IC photons
     for i in range(len(electrons)):
-        photons_particles += electronsN[i] * ICon30CMB(EgeV_list, electrons[i]*6.24e11, z) * np.gradient(Eg_list) / Eg_list**2
+        if EgeV_list[i] > 1e6:
+            photons_particles += electronsN[i] * ICon30CMB(EgeV_list, electrons[i]*6.24e11, z) * np.gradient(Eg_list) / Eg_list**2
+        else:
+            n_ion[ii, 0] += electronsN[i] * EgeV_list[i] / 13.6 * 0.3
+            n_ion[ii, 4] += electronsN[i] * EgeV_list[i] / 24.6 * 0.023
+            # n_ion[ii, 8] += electronsN[i] * EgeV_list[i] / 13.6 * 0.3 *
     electronsN *= 0
     # column density
     N_naked = nb*c*tau*(1+z)**3
@@ -579,7 +572,7 @@ MatterDensityInGramsPerComovingCm = 5.7687745605587125e-30
 Factor = (MatterDensityInGramsPerComovingCm / (mx * 1.783e-33)) ** 2 * sigmav
 plt.plot(z_list, np.cumsum(n_ion[:, 0]+n_ion[:, 1])*Factor/(nb*0.76))
 plt.plot(z_list, np.cumsum(n_ion[:, 4]+n_ion[:, 5])*Factor/(nb*0.23/4))
-plt.plot(z_list, np.cumsum(n_ion[:, 8])*Factor/(nb*0.01/8))
+# plt.plot(z_list, np.cumsum(n_ion[:, 8])*Factor/(nb*0.01/8))
 plt.xscale('log')
 plt.yscale('log')
 

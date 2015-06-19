@@ -64,10 +64,10 @@ def eedEdt(E, ne):
     # return np.sqrt(4.0*np.pi*n*)
 
 
-z=10
+z=100
 T_CMB=2.7*(1+z)
 
-xi = 0.01
+xi = 0.001
 
 
 Eg_list = np.logspace(-6, 12, 100)/6.24e11
