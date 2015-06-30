@@ -1,6 +1,18 @@
 __author__ = 'kaurov'
 import numpy as np
 
+
+sigmaT = 6.6524e-25 #cm^2
+me = 9.109e-28 # g
+c = 2.9979e10 # cm/s
+#hbar = 4.135668e-15/2.0/np.pi # eV*s
+hbar = 1.0545e-27 # erg*s
+kB = 1.380648e-16 # erg/K
+
+#
+# Photoionization cross sections
+#
+
 # http://adsabs.harvard.edu/abs/1996ApJ...465..487V
 
 lookup = np.zeros([10, 10, 20])
@@ -10,6 +22,13 @@ lookup[2, 1, :9] = [54.42,      5e4,        1.72,     13690,    32.88,      2.96
 lookup[8, 8, :9] = [1.362e1,    5.380E+2,   1.240e0,  1.745E+3, 3.784e0,    1.764e1,    7.589E-2,   8.698e0,    1.271E-1]
 
 def sigmaX(E, Z, N):
+    '''
+    Photoionization cross section
+    :param E: energy of a photon
+    :param Z: Atomic number
+    :param N: number of electrons
+    :return: cross section in cm^-2
+    '''
     Eth, Emax, E0, sigma0, ya, P, yw, y0, y1 = lookup[Z, N, :9]
     x = E/E0-y0
     y = np.sqrt(x**2+y1**2)
@@ -27,3 +46,64 @@ def sigmaX(E, Z, N):
 # fixlogax(plt.gca(), 'y')
 # plt.xlim([10,1e5])
 # plt.ylim([0.1,1e3])
+
+
+#
+# Electron impact cross sections
+#
+
+def sigmaHex(E):
+    '''
+    Excitation cross section
+    :param E: Energy of incident electron in ergs
+    :return: cm^-2
+    '''
+    return 0.75e-15 * np.log(E/0.1*6.24e11) / (E*6.24e11)
+
+# Shull 1985
+def sigmaHion(E):
+    '''
+    Ionization cross section
+    :param E: Energy of incident electron in ergs
+    :return: cm^-2
+    '''
+    return 2.75e-15 * np.log(E/13.6*6.24e11) / (E*6.24e11)
+
+# Secondary electron energy distribution
+def rhoE(E, ei):
+    '''
+    Energy of secondary electron
+    :param E: Energy of primary electron in ergs
+    :param ei: ei in ergs
+    :return: Energy of secondary electron in ergs
+    '''
+
+    r = np.random.rand(len(E))
+    ei_mod = ei#+np.log10(E*6.24e11/100)*2/6.24e11
+    temp = np.tan(r*np.pi/2.0)*(ei*(1+np.log10(E*6.24e11/ei_mod)))
+    temp[temp > E/2.0] = E/2.0
+    return temp
+
+# Electron cooling due to interaction with other electrons
+# TODO Add a better Coulomb logarithm fitting function
+def eedEdt(E, ne, T):
+    '''
+    Rate of energy loss of an electron with energy E in electron plasma with density ne and temperature T
+    :param E: in ergs
+    :param ne: in cm^-3
+    :param T: in K
+    :return: in ergs/s
+    '''
+    omega = c * np.sqrt(1.0 - 511e3**2 / (511e3 + E*6.24e11)**2)
+    lnL = 16.3 - np.log10(ne)*1.15 + 3.45*np.log10(T/100.0) # my fit to Spitzer 1965
+    return 4. * np.pi * ne * 4.8e-10**4 / 9.1e-28 / omega * lnL
+
+def sigmakn(Eg, e, gamma):
+    Gamma = 4*e*gamma/me/c**2
+    eta = e*Eg/(me*c**2)**2
+    q = Eg/Gamma/(gamma*me*c**2-Eg)
+    G = 2.0*q*np.log(q)+(1.0+2.0*q)*(1.0-q)+2.0*eta*q*(1.0-q)
+    G[G < 0] = 0
+    G[(4*gamma**2)**-1 > q] = 0
+    G[q > 1] = 0
+    return 3.0*sigmaT/4.0/e/gamma**2*G
