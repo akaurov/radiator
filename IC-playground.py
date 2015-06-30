@@ -24,14 +24,16 @@ def sigmakn(Eg, e, gamma):
 sigmaknV = np.vectorize(sigmakn, excluded=['Eg', 'gamma'])
 
 
-Eg_list = np.logspace(-6, 12, 300)/6.24e11
+Eg_list = np.logspace(-6, 12, 1000)/6.24e11
 nu_list = Eg_list / (hbar*2*np.pi)
 EgeV_list = Eg_list*6.24e11
 
-z = 0.0
+z = 15.0
 T_CMB = 2.7*(1.0+z)
 nb = (1.0+z)**3*2.2e-7
 # T_list=np.array([1000])
+
+
 
 photons = np.zeros(len(Eg_list))
 # photons[np.where(np.abs(Eg_list-T_CMB/11500) == np.abs(Eg_list-T_CMB/11500).min())[0][0]] = 511
@@ -44,8 +46,11 @@ electrons[0] = 1e8 / 6.24e11
 
 
 electrons = np.zeros(1)
-E00 = 1e10
+E00 = 1e8
 electrons[0] = E00 / 6.24e11
+
+electronB = electrons[0]
+
 # electrons /= np.trapz(electrons, Eg_list)
 # print 'number of electrons per cm^3: ', np.trapz(electrons, Eg_list)
 z=100
@@ -63,7 +68,7 @@ for j in range(200):
     chances = np.random.random([len(electrons), 2])
     for i in range(len(electrons)):
         if electrons[i]>10**5.42 / 6.24e11:
-            gamma = electrons[i] / (me*c**2)
+            gamma = ((me*c**2)+electrons[i]) / (me*c**2)
             sigma_IC = np.zeros(len(Eg_list))
             photons_particles_add = np.zeros(len(Eg_list))
             electrons_minus = 0
@@ -90,7 +95,8 @@ for j in range(200):
             photons_particles += photons_particles_add
             electrons_minus *= tau
             electrons[i] -= electrons_minus
-            print tau, np.log10(electrons[0]*6.24e11)
+            electronB -= tau*2.3e-13*1e9/6.24e11*(1+z)**4*(electronB*6.24e11/100e9)**2
+            print tau, np.log10(electrons[0]*6.24e11), np.log10(electronB*6.24e11)
     # if j % 200 == 199:
     #     plt.plot(EgeV_list, photons_particles/np.gradient(Eg_list)*Eg_list**2)
 
@@ -101,6 +107,7 @@ plt.plot(EgeV_list, photons_particles/np.gradient(Eg_list)*Eg_list**2)
 plt.plot(EgeV_list, CMBphotons*Eg_list**2)
 plt.xscale('log')
 plt.yscale('log')
+
 
 
 def ICon30CMB(EgeV_list, E0, z):
