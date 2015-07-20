@@ -1,5 +1,3 @@
-__author__ = 'A'
-__author__ = 'kaurov'
 import numpy as np
 import matplotlib.pyplot as plt
 from radiator.figurestyle import *
@@ -19,18 +17,18 @@ kB = 1.380648e-16 # erg/K
 
 
 # Do electrons-photons interactions
-E0_list = np.logspace(1, 9, 50)
+E0_list = np.logspace(1, 9, 100)
 z = 600.0
 Eth_IC = 10.
-delta = 1000.0
+delta = 0.0
 T_CMB = 2.73*(1+z)
 xi = 0.01
 nb = 2.2e-7*(1.0+delta)
 T = 10**3
-precision = 0.1
+precision = 0.01
 accurate_cmb = False
 
-Eg_list = np.logspace(-6, np.log10(E0_list.max()), 100)/6.24e11
+Eg_list = np.logspace(-6, np.log10(E0_list.max()), 300)/6.24e11
 nu_list = Eg_list / (hbar*2*np.pi)
 EgeV_list = Eg_list*6.24e11
 
@@ -39,10 +37,6 @@ N_CMB = np.trapz(CMBphotons, Eg_list)
 E_CMB_av = np.trapz(CMBphotons*Eg_list, Eg_list) / np.trapz(CMBphotons, Eg_list)
 print 'number of photons per cm^3: ', N_CMB
 print 'average CMB photon energy [eV]: ', E_CMB_av *6.24e11
-
-
-
-
 
 # tau_list = np.zeros([len(E0_list), 10000]) * np.nan
 # IC_total_list = np.zeros([len(E0_list), 10000])
@@ -66,11 +60,14 @@ for i_E in range(len(E0_list)):
     E0 = E0_list[i_E]
 
     if E0 < 1e2:
-        MC_N = 10
+        MC_N = 1000
+        precision = 0.01
     elif E0 < 1e4:
-        MC_N = 10
+        MC_N = 100
+        precision = 0.01
     else:
         MC_N = 10
+        precision = 0.01
 
     MC_N_list[i_E] = MC_N
 
@@ -78,6 +75,8 @@ for i_E in range(len(E0_list)):
     coll_loss = 0
     coll_ex = 0
     IC_total = 0
+    IC_soft = 0
+    IC_hard = 0
     photons_particles = np.zeros(len(Eg_list))
 
     for iii in range(MC_N):
@@ -96,6 +95,7 @@ for i_E in range(len(E0_list)):
                     photons_particles_total_add = np.zeros(len(Eg_list))
                     tau_IC = 3.14e100
                     if electrons[i] > Eth_IC/6.24e11:
+                        accurate_cmb = electrons[i] < 1/6.24e11
                         if accurate_cmb:
                             for j1 in range(len(Eg_list)):
                                 sigma_temp = sigmakn(Eg_list, Eg_list[j1], gamma) * np.gradient(Eg_list)
@@ -150,23 +150,30 @@ for i_E in range(len(E0_list)):
             # inter_mask = np.where(electrons < E0_list[i_E-1]/6.24e11)[0]
             inter_mask = np.where((electrons < E0_list[i_E-1]/6.24e11))[0]# & (electrons < Eth_IC/6.24e11))[0]
             IC_total_frac = np.interp(electrons[inter_mask], E0_list/6.24e11, results[:, 0])
+            IC_soft_frac = np.interp(electrons[inter_mask], E0_list/6.24e11, results[:, 4])
+            IC_hard_frac = np.interp(electrons[inter_mask], E0_list/6.24e11, results[:, 5])
             coll_ion_frac = np.interp(electrons[inter_mask], E0_list/6.24e11, results[:, 1])
             coll_ex_frac = np.interp(electrons[inter_mask], E0_list/6.24e11, results[:, 2])
             coll_loss_frac = np.interp(electrons[inter_mask], E0_list/6.24e11, results[:, 3])
             IC_total += np.sum(IC_total_frac * electrons[inter_mask])
+            IC_soft += np.sum(IC_soft_frac * electrons[inter_mask])
+            IC_hard += np.sum(IC_hard_frac * electrons[inter_mask])
             coll_ion += np.sum(coll_ion_frac * electrons[inter_mask])
             coll_ex += np.sum(coll_ex_frac * electrons[inter_mask])
             coll_loss += np.sum(coll_loss_frac * electrons[inter_mask])
             electrons = np.delete(electrons, inter_mask)
     results[i_E,:6] = IC_total*6.24e11, coll_ion*6.24e11, coll_ex*6.24e11, coll_loss*6.24e11, \
-                      np.sum((photons_particles*Eg_list)[EgeV_list < 13.6])*6.24e11, \
-                      np.sum((photons_particles*Eg_list)[EgeV_list >= 13.6])*6.24e11
+                      (IC_soft+np.sum((photons_particles*Eg_list)[EgeV_list < 13.6]))*6.24e11, \
+                      (IC_hard+np.sum((photons_particles*Eg_list)[EgeV_list >= 13.6]))*6.24e11
     photons_particles_all[:, i_E] = photons_particles
     results[i_E, :] /= MC_N*E0_list[i_E]
     print E0, results[i_E,:6], np.sum(results[i_E,:4])
 
+
+np.savez('output/%05i-%01.5f-%08.1f-snap.npz'%(z,xi,delta), E0_list=E0_list, results=results, photons_particles_all=photons_particles_all)
 plt.plot(E0_list, np.sum(results[:, 1:4],1))
 plt.plot(E0_list, results[:, 0])
+plt.plot(E0_list, results[:, 4])
 plt.plot(E0_list, results[:, 5])
 plt.xscale('log')
 plt.xlabel(r'$E\;\mathrm{[eV]}$')
