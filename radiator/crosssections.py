@@ -58,7 +58,7 @@ def sigmaHex(E):
     :param E: Energy of incident electron in ergs
     :return: cm^-2
     '''
-    return 0.75e-15 * np.log(E/0.1*6.24e11) / (E*6.24e11)
+    return (E*6.24e11 > 10.2) * 3.75e-15 * np.log(E/2.*6.24e11) / (E*6.24e11)
 
 # Shull 1985
 def sigmaHion(E):
@@ -68,6 +68,24 @@ def sigmaHion(E):
     :return: cm^-2
     '''
     return 2.75e-15 * np.log(E/13.6*6.24e11) / (E*6.24e11)
+
+# CCC fits
+def sigmaHe(E, type = 'ion', ion_state='I'):
+    '''
+    Ionization and excitation cross sections for HeI and HeII
+    :param E: Energy of incident electron in ergs
+    :return: cm^-2
+    '''
+    if (type == 'ion') and (ion_state == 'I'):
+        return 2.75e-15 * np.log(E/24.6*6.24e11) / (E*6.24e11)
+    elif (type == 'ion') and (ion_state == 'II'):
+        return 0.75e-15 * np.log(E/54.4*6.24e11) / (E*6.24e11)
+    elif (type == 'ex') and (ion_state == 'I'):
+        return (E*6.24e11 > 20) * 3.75e-15 * np.log(E/3.*6.24e11) / (E*6.24e11)
+    elif (type == 'ex') and (ion_state == 'II'):
+        return (E*6.24e11 > 41) * 0.025e-15 * np.log(E/4.6*6.24e11) / (E*6.24e11)
+    else:
+        return "error"
 
 # Secondary electron energy distribution
 def rhoE(E, ei):
