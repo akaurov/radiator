@@ -163,7 +163,7 @@ def runsim(E_ph_initial, z_start, bins=100):
             E_other = 0
 
             if randomii[ii] < chance_pp+chance_photoion_H+chance_coll_ion_H:
-                print iii, ii
+                # print iii, ii
                 results[ii] += 1
                 E_other = 1.0 * E_ph
                 E_ph = 0
@@ -249,7 +249,7 @@ plt.subplots_adjust(wspace=0.1)
 
 #######################################
 
-bins=100
+bins=1000
 total_mocks=10000
 z_list = np.logspace(np.log10(30+1), np.log10(z_end+1), bins)-1.0
 
@@ -265,7 +265,7 @@ plt.plot(z_list, np.cumsum(E_redshift_total430)/total_mocks/1e4, 'k--', lw=1)
 
 
 
-bins=100
+bins=1000
 total_mocks=10000
 z_list = np.logspace(np.log10(1100+1), np.log10(z_end+1), bins)-1.0
 
@@ -278,3 +278,21 @@ plt.plot(z_list, np.cumsum(E_redshift_total71100)/total_mocks/1e7, 'k--', lw=1)
 
 plt.plot(z_list, np.cumsum(E_other_total61100)/total_mocks/1e6, 'k-', lw=1)
 plt.plot(z_list, np.cumsum(E_redshift_total61100)/total_mocks/1e6, 'k--', lw=1)
+
+
+
+
+###
+
+
+bins=100
+total_mocks=1000
+
+E_ph_interaction_list = np.logspace(np.log10(13.61), 12, 30)
+Interaction_fraction = E_list.copy() * 0.0
+for i in range(len(E_list)):
+    print i
+    results350, E_redshift_total430, E_remaining_total430, E_other_total430 = runsim(E_ph_interaction_list[i], 50, bins=bins)
+    Interaction_fraction[i] = np.sum(E_other_total430)/total_mocks/E_ph_interaction_list[i]
+
+np.savez('E_effective.npz', E_ph_interaction_list = E_ph_interaction_list, Interaction_fraction=Interaction_fraction)
