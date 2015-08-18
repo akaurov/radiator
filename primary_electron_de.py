@@ -7,7 +7,6 @@ from radiator.figurestyle import *
 define_figure_style()
 # http://arxiv.org/pdf/0807.1969.pdf
 
-
 from radiator.crosssections import *
 
 
@@ -22,9 +21,9 @@ kB = 1.380648e-16 # erg/K
 E0_list = np.logspace(1, 12, 250)
 z = 50.0
 Eth_IC = 10.
-delta = 1000000.0
+delta = 0.0
 T_CMB = 2.73*(1+z)
-xiH = 0.1
+xiH = 0.01
 nb = cosmolopy.cden.baryon_densities(**cosmolopy.fidcosmo)[0] / cosmolopy.constants.Mpc_cm**3 * cosmolopy.constants.M_sun_g / cosmolopy.constants.m_p_g * 0.04
 nb *= (1.0+delta)
 T = 10**4
@@ -42,9 +41,10 @@ nbHeI = mass_abundance[ 2, 2] * nb / 4.0
 nbHeII = mass_abundance[ 2, 1] * nb / 4.0
 nbe = mass_abundance[ 1, 0] * nb + mass_abundance[ 2, 1] * nb / 4.0 + mass_abundance[ 2, 0] * nb / 4.0
 
-Eg_list = np.logspace(-6, np.log10(E0_list.max()), 300)/6.24e11
-nu_list = Eg_list / (hbar*2*np.pi)
+Eg_list = np.logspace(-6, np.log10(E0_list.max()), 1000)/6.24e11
 EgeV_list = Eg_list*6.24e11
+
+nu_list = Eg_list / (hbar*2*np.pi)
 
 CMBphotons = 8*np.pi*2*np.pi*hbar*nu_list**3/c**3/(np.exp(2.0*np.pi*hbar*nu_list/kB/T_CMB)-1.0)/Eg_list/(hbar*2*np.pi)
 N_CMB = np.trapz(CMBphotons, Eg_list)
@@ -68,21 +68,26 @@ coll_ion = 0
 coll_loss = 0
 coll_ex = 0
 IC_total = 0
-# E0_list = np.array([1e6])
-results = np.zeros([len(E0_list), 10])
+
+results = np.zeros(len(E0_list), dtype=([('H_I_ion', 'f4'), ('H_I_ex', 'f4'),
+                                         ('He_I_ion', 'f4'), ('He_I_ex', 'f4'),
+                                         ('He_II_ion', 'f4'), ('He_II_ex', 'f4'),
+                                         ('ee', 'f4'),
+                                         ('IC', 'f4')]))
 MC_N_list = np.zeros([len(E0_list)])
 
-for i_E in range(len(E0_list)):
+for i_E in range(0,10):#len(E0_list)):
+    print i_E
     E0 = E0_list[i_E]
 
     if E0 < 1e2:
-        MC_N = 1000
-        precision = 0.01
-    elif E0 < 1e4:
         MC_N = 100
         precision = 0.01
-    else:
+    elif E0 < 1e5:
         MC_N = 10
+        precision = 0.01
+    else:
+        MC_N = 1
         precision = 0.01
 
     MC_N_list[i_E] = MC_N
@@ -143,11 +148,11 @@ for i_E in range(len(E0_list)):
                     tau_ex_HeII = nbHeII*(1+z)**3*sigmaHe(electrons[i], 'ex', 'II')*v
                     tau_ion_HeII = nbHeII*(1+z)**3*sigmaHe(electrons[i], 'ion', 'II')*v
 
-                    if electrons[i] > 1e5/6.24e11:
+                    if electrons[i] > 1e6/6.24e11:
                         # Approximate mode
                         # tau = precision*min([1./tau_ex, 1./tau_ion, tau_IC, electrons[i]/eedEdt_now])
                         secondary_energy = rhoE(np.array([electrons[i]]), 8.0/6.24e11)[0]
-                        energy_to_distribute = electrons[i] - E0_list[i_E-1]/6.24e11 + 1/6.24e11
+                        energy_to_distribute = electrons[i] * precision
                         e_to_ex = tau_ex * 10.2 / 6.24e11
                         e_to_ion = tau_ion * 13.6/ 6.24e11
                         e_to_sec = tau_ion * secondary_energy
@@ -165,7 +170,7 @@ for i_E in range(len(E0_list)):
                         coll_ion += e_to_ion
                         photons_particles += photons_particles_total_add*e_factor
                         e_factor_int = np.floor(e_to_sec / secondary_energy)
-                        print electrons[i]*6.24e11, energy_to_distribute
+                        # print electrons[i]*6.24e11, energy_to_distribute*6.24e11
                         electrons[i] -= energy_to_distribute
                         electrons = np.append(electrons, np.ones(e_factor_int)*e_to_sec/e_factor_int)
                     else:
@@ -190,32 +195,32 @@ for i_E in range(len(E0_list)):
                         if electrons[i] > 20.0 / 6.24e11:
                             if rand_a[1] < (1.0 - np.exp(-tau_ex_HeI*tau)):
                                 electrons[i] -= 20.0 / 6.24e11
-                                coll_ex += 20.0 / 6.24e11
+                                coll_ex_HeI += 20.0 / 6.24e11
                         if electrons[i] > 41.0 / 6.24e11:
                             if rand_a[2] < (1.0 - np.exp(-tau_ex_HeII*tau)):
                                 electrons[i] -= 41.0 / 6.24e11
-                                coll_ex += 41.0 / 6.24e11
+                                coll_ex_HeII += 41.0 / 6.24e11
                         if electrons[i] > 13.6 / 6.24e11:
-                            if rand_a[3] < (1.0 - np.exp(-tau_ex*tau)):
+                            if rand_a[3] < (1.0 - np.exp(-tau_ion*tau)):
                                 temp = rhoE(np.array([electrons[i]]), 8.0/6.24e11)[0]
                                 electrons[i] -= 13.6 / 6.24e11
                                 electrons[i] = electrons[i]-temp
                                 electrons = np.append(electrons, temp)
                                 coll_ion += 13.6 / 6.24e11
                         if electrons[i] > 24.6 / 6.24e11:
-                            if rand_a[4] < (1.0 - np.exp(-tau_ex*tau)):
+                            if rand_a[4] < (1.0 - np.exp(-tau_ion_HeI*tau)):
                                 temp = rhoE(np.array([electrons[i]]), 8.0/6.24e11)[0]
                                 electrons[i] -= 24.6 / 6.24e11
                                 electrons[i] = electrons[i]-temp
                                 electrons = np.append(electrons, temp)
-                                coll_ion += 24.6 / 6.24e11
+                                coll_ion_HeI += 24.6 / 6.24e11
                         if electrons[i] > 54.4 / 6.24e11:
-                            if rand_a[5] < (1.0 - np.exp(-tau_ex*tau)):
+                            if rand_a[5] < (1.0 - np.exp(-tau_ion_HeII*tau)):
                                 temp = rhoE(np.array([electrons[i]]), 8.0/6.24e11)[0]
                                 electrons[i] -= 54.4 / 6.24e11
                                 electrons[i] = electrons[i]-temp
                                 electrons = np.append(electrons, temp)
-                                coll_ion += 54.4 / 6.24e11
+                                coll_ion_HeII += 54.4 / 6.24e11
                         if electrons[i] > eedEdt_now * tau:
                             electrons[i] -= eedEdt_now * tau
                             coll_loss += eedEdt_now * tau
@@ -227,76 +232,57 @@ for i_E in range(len(E0_list)):
                     electrons[i] = 0
             # interpolation mode
             # inter_mask = np.where(electrons < E0_list[i_E-1]/6.24e11)[0]
-            inter_mask = np.where((electrons < E0_list[i_E-1]/6.24e11))[0]# & (electrons < Eth_IC/6.24e11))[0]
-            IC_total_frac = np.interp(electrons[inter_mask], E0_list/6.24e11, results[:, 0])
-            IC_soft_frac = np.interp(electrons[inter_mask], E0_list/6.24e11, results[:, 4])
-            IC_hard_frac = np.interp(electrons[inter_mask], E0_list/6.24e11, results[:, 5])
-            coll_ion_frac = np.interp(electrons[inter_mask], E0_list/6.24e11, results[:, 1])
-            coll_ex_frac = np.interp(electrons[inter_mask], E0_list/6.24e11, results[:, 2])
-            coll_loss_frac = np.interp(electrons[inter_mask], E0_list/6.24e11, results[:, 3])
+            inter_mask = np.where((electrons < E0_list[i_E-1]/6.24e11) & (electrons < 1e3/6.24e11))[0]# & (electrons < Eth_IC/6.24e11))[0]
+            IC_total_frac = np.interp(electrons[inter_mask], E0_list/6.24e11, results['IC'])
+            # IC_soft_frac = np.interp(electrons[inter_mask], E0_list/6.24e11, results[:, 4])
+            # IC_hard_frac = np.interp(electrons[inter_mask], E0_list/6.24e11, results[:, 5])
+            coll_ion_frac = np.interp(electrons[inter_mask], E0_list/6.24e11, results['H_I_ion'])
+            coll_ex_frac = np.interp(electrons[inter_mask], E0_list/6.24e11, results['H_I_ex'])
+            coll_ion_HeI_frac = np.interp(electrons[inter_mask], E0_list/6.24e11, results['He_I_ion'])
+            coll_ex_HeI_frac = np.interp(electrons[inter_mask], E0_list/6.24e11, results['He_I_ex'])
+            coll_ion_HeII_frac = np.interp(electrons[inter_mask], E0_list/6.24e11, results['He_II_ion'])
+            coll_ex_HeII_frac = np.interp(electrons[inter_mask], E0_list/6.24e11, results['He_II_ex'])
+            coll_loss_frac = np.interp(electrons[inter_mask], E0_list/6.24e11, results['ee'])
             IC_total += np.sum(IC_total_frac * electrons[inter_mask])
-            IC_soft += np.sum(IC_soft_frac * electrons[inter_mask])
-            IC_hard += np.sum(IC_hard_frac * electrons[inter_mask])
+            # IC_soft += np.sum(IC_soft_frac * electrons[inter_mask])
+            # IC_hard += np.sum(IC_hard_frac * electrons[inter_mask])
             coll_ion += np.sum(coll_ion_frac * electrons[inter_mask])
             coll_ex += np.sum(coll_ex_frac * electrons[inter_mask])
+            coll_ion_HeI += np.sum(coll_ion_HeI_frac * electrons[inter_mask])
+            coll_ex_HeI += np.sum(coll_ex_HeI_frac * electrons[inter_mask])
+            coll_ion_HeII += np.sum(coll_ion_HeII_frac * electrons[inter_mask])
+            coll_ex_HeII += np.sum(coll_ex_HeII_frac * electrons[inter_mask])
             coll_loss += np.sum(coll_loss_frac * electrons[inter_mask])
             electrons = np.delete(electrons, inter_mask)
-    results[i_E,:6] = IC_total*6.24e11, coll_ion*6.24e11, coll_ex*6.24e11, coll_loss*6.24e11, \
-                      (IC_soft+np.sum((photons_particles*Eg_list)[EgeV_list < 13.6]))*6.24e11, \
-                      (IC_hard+np.sum((photons_particles*Eg_list)[EgeV_list >= 13.6]))*6.24e11
+    results['IC'][i_E] = IC_total*6.24e11 / (MC_N*E0_list[i_E])
+    results['H_I_ion'][i_E] = coll_ion*6.24e11 / (MC_N*E0_list[i_E])
+    results['H_I_ex'][i_E] = coll_ex*6.24e11 / (MC_N*E0_list[i_E])
+    results['He_I_ion'][i_E] = coll_ion_HeI*6.24e11 / (MC_N*E0_list[i_E])
+    results['He_I_ex'][i_E] = coll_ex_HeI*6.24e11 / (MC_N*E0_list[i_E])
+    results['He_II_ion'][i_E] = coll_ion_HeII*6.24e11 / (MC_N*E0_list[i_E])
+    results['He_II_ex'][i_E] = coll_ex_HeII*6.24e11 / (MC_N*E0_list[i_E])
+    results['ee'][i_E] = coll_loss*6.24e11 / (MC_N*E0_list[i_E])
 
-    photons_particles_all[:, i_E] = photons_particles
-    results[i_E, :] /= MC_N*E0_list[i_E]
-    print E0, results[i_E,:6], np.sum(results[i_E,:4])
+    photons_particles_all[:, i_E] = photons_particles / MC_N
+    print np.sum(photons_particles_all[:, i_E]*EgeV_list)
+    print E0#, np.sum((results[i_E]))
 
 
 np.savez('output/%05i-%01.5f-%08.1f-snap.npz'%(z,xiH,delta), E0_list=E0_list, results=results, photons_particles_all=photons_particles_all, Eg_list=Eg_list, EgeV_list=EgeV_list)
 
-plt.plot(E0_list, np.sum(results[:, 1:4], 1))
-plt.plot(E0_list, results[:, 4])
-plt.plot(E0_list, results[:, 5])
+# plt.plot(E0_list, np.sum(results[:, 1:4], 1))
+# plt.plot(E0_list, results['ee'],'--k')
+plt.plot(E0_list, results['H_I_ion'],'b')
+plt.plot(E0_list, results['H_I_ex'],'--b')
+plt.plot(E0_list, results['He_I_ion'],'r')
+plt.plot(E0_list, results['He_I_ex'],'--r')
+plt.plot(E0_list, results['He_II_ion'], 'k')
+plt.plot(E0_list, results['He_II_ex'], '--k')
+plt.plot(E0_list, results['IC'], '-')
 # plt.plot(E0_list, results[:, 1])
 # plt.plot(E0_list, results[:, 2])
 # plt.plot(E0_list, results[:, 3])
 plt.xscale('log')
-plt.yscale('log')
+# plt.yscale('log')
 plt.xlabel(r'$E\;\mathrm{[eV]}$')
 
-
-    for i in range(len(E_ph_interaction_list)):
-        results[i_E, 7] +=
-
-# plt.savefig('%05i-%1.5f-%5.1f-fig.png'%(z,xi,delta), dpi=300)
-# # plt.yscale('log')
-#
-#
-# plt.plot(EgeV_list, 3*(13.6+8)*(1-np.exp(-nb*(1+z)**3*sigmaHex(Eg_list)*c*np.sqrt(1-511e3**2/(511e3+EgeV_list)**2))))
-# plt.plot(EgeV_list, 2.3e-13*1e9*(1+z)**4*(EgeV_list/100e9)**2)
-# plt.xscale('log')
-# plt.yscale('log')
-# plt.show()
-
-# j += 1
-# IC_total_list[iii, j] = 0
-# coll_ion_list[iii, j] = 0
-# coll_ex_list[iii, j] = 0
-# coll_loss_list[iii, j] = electrons[i]
-#
-#         # if j % 200 == 199:
-#             # plt.plot(EgeV_list, photons_particles/np.gradient(Eg_list)*Eg_list**2)
-#
-# plt.clf()
-# total_energy = IC_total_list+coll_ion_list+coll_ex_list+coll_loss_list
-# plt.plot(E0_list, IC_total_list.sum(1)/total_energy.sum(1), '-k')
-# plt.plot(E0_list, coll_ion_list.sum(1)/total_energy.sum(1), '--k')
-# plt.plot(E0_list, coll_ex_list.sum(1)/total_energy.sum(1), '-.k')
-# plt.plot(E0_list, coll_loss_list.sum(1)/total_energy.sum(1), ':k')
-# plt.xscale('log')
-# plt.xlim([10,1e9])
-# # plt.yscale('log')
-# plt.xlabel(r'$E_0\;\mathrm{[eV]}$')
-# plt.ylabel(r'$\mathrm{Fractional\;contribution}$')
-# fixlogax(plt.gca(), 'x')
-# # plt.savefig('figures/FracVsE0z10xi001.pdf')
-
-#########################

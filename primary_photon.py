@@ -122,12 +122,16 @@ def runsim(E_ph_initial, z_start, bins=100):
     z_list = np.logspace(np.log10(z_start+1), np.log10(z_end+1), bins)-1.0
     age_list = cp.distance.age(z_list, **cp.fidcosmo)
     results = np.zeros(len(z_list))
+    resultsH = np.zeros(len(z_list))
+    resultsHe = np.zeros(len(z_list))
     total_mocks = 1000
     E_redshift_total = np.zeros(bins)
     E_other_total = np.zeros(bins)
+    E_other_total_H = np.zeros(bins)
+    E_other_total_He = np.zeros(bins)
     E_remaining_total = np.zeros(bins)
     for iii in range(total_mocks):
-        randomii = np.random.random(len(z_list))
+        randomii = np.random.random([len(z_list), 10])
         E_ph = 1.0*E_ph_initial
         E_redshift = 0.
         E_other = 0.
@@ -153,18 +157,33 @@ def runsim(E_ph_initial, z_start, bins=100):
             # photoion
             opt_dep_photoion_H = (sigmaX([E_ph], 1, 1)[0]*1e-18*N_H)
             opt_dep_photoion_He = (sigmaX([E_ph], 2, 2)[0]*1e-18*N_He)
+            opt_dep_photoion_O = (sigmaX([E_ph], 8, 8)[0]*1e-18*N_O)
             chance_photoion_H = 1.0 - np.exp(-opt_dep_photoion_H)
             chance_photoion_He = 1.0 - np.exp(-opt_dep_photoion_He)
+            chance_photoion_O = 1.0 - np.exp(-opt_dep_photoion_O)
 
             # collisional ion
             temp_factor_H = (10**np.interp(np.log10(E_ph/1e6), np.log10(crossections[:,0]), np.log10(crossections[:,2]))*1e-24*N_H)
             chance_coll_ion_H = 1.0 - np.exp(-temp_factor_H)
+            temp_factor_He = (10**np.interp(np.log10(E_ph/1e6), np.log10(crossectionsHe[:,0]), np.log10(crossectionsHe[:,2]))*1e-24*N_H)
+            chance_coll_ion_He = 1.0 - np.exp(-temp_factor_He)
 
             E_other = 0
+            E_other_H = 0
+            E_other_He = 0
 
-            if randomii[ii] < chance_pp+chance_photoion_H+chance_coll_ion_H:
+            if randomii[ii, 0] < chance_pp+chance_photoion_H+chance_coll_ion_H+chance_photoion_He+chance_coll_ion_He:
                 # print iii, ii
+                tempH = chance_pp+chance_photoion_H+chance_coll_ion_H
+                tempHe = chance_photoion_He+chance_coll_ion_He
+                tempHHe = tempH + tempHe
+                tempH /= tempHHe
+                tempHe /= tempHHe
+                resultsH[ii] += tempH
+                resultsHe[ii] += tempHe
                 results[ii] += 1
+                E_other_H = tempH * E_ph
+                E_other_He = tempHe * E_ph
                 E_other = 1.0 * E_ph
                 E_ph = 0
 
@@ -176,23 +195,21 @@ def runsim(E_ph_initial, z_start, bins=100):
             E_redshift_total[ii] += E_redshift
             E_remaining_total[ii] += E_ph
             E_other_total[ii] += E_other
-    return results, E_redshift_total, E_remaining_total, E_other_total
+            E_other_total_H[ii] += E_other_H
+            E_other_total_He[ii] += E_other_He
+    return results, E_redshift_total, E_remaining_total, E_other_total, E_other_total_H, E_other_total_He
 
 
 bins=1000
 total_mocks=1000
 
-results430, E_redshift_total430, E_remaining_total430, E_other_total430 = runsim(1e4, 30, bins=bins)
-# results530, E_redshift_total530, E_remaining_total530, E_other_total530 = runsim(1e5, 30)
-results630, E_redshift_total630, E_remaining_total630, E_other_total630 = runsim(1e6, 30, bins=bins)
-results930, E_redshift_total930, E_remaining_total930, E_other_total930 = runsim(1e9, 30, bins=bins)
+results430 = runsim(1e4, 30, bins=bins)
+results630 = runsim(1e6, 30, bins=bins)
+results930 = runsim(1e9, 30, bins=bins)
 
-results41100, E_redshift_total41100, E_remaining_total41100, E_other_total41100 = runsim(1e4, 1100, bins=bins)
-results61100, E_redshift_total61100, E_remaining_total61100, E_other_total61100 = runsim(1e6, 1100, bins=bins)
-# results61100, E_redshift_total71100, E_remaining_total71100, E_other_total71100 = runsim(1e7, 1100)
-# results81100, E_redshift_total81100, E_remaining_total81100, E_other_total81100 = runsim(1e8, 1100)
-results91100, E_redshift_total91100, E_remaining_total91100, E_other_total91100 = runsim(1e9, 1100, bins=bins)
-# results121100, E_redshift_total121100, E_remaining_total121100, E_other_total121100 = runsim(1e12, 1100)
+results41100 = runsim(1e4, 1100, bins=bins)
+results61100 = runsim(1e6, 1100, bins=bins)
+results91100 = runsim(1e9, 1100, bins=bins)
 
 print E_redshift_total, E_remaining_total, E_other_total
 
@@ -201,23 +218,76 @@ print E_redshift_total, E_remaining_total, E_other_total
 f,(ax,ax2) = plt.subplots(1,2,sharey=True)
 
 z_list = np.logspace(np.log10(30+1), np.log10(z_end+1), bins)-1.0
-ax.plot(z_list, np.cumsum(E_other_total430)/total_mocks/1e4, 'k:', lw=1)
-ax.plot(z_list, np.cumsum(E_other_total630)/total_mocks/1e6, 'k--', lw=1)
-ax.plot(z_list, np.cumsum(E_other_total930)/total_mocks/1e9, 'k-', lw=1)
+ax.plot(z_list, np.cumsum(results430[3])/total_mocks/1e4, 'k:', lw=1)
+ax.plot(z_list, np.cumsum(results630[3])/total_mocks/1e6, 'k--', lw=1)
+ax.plot(z_list, np.cumsum(results930[3])/total_mocks/1e9, 'k-', lw=1)
 z_list = np.logspace(np.log10(1100+1), np.log10(z_end+1), bins)-1.0
-ax.plot(z_list, np.cumsum(E_other_total41100)/total_mocks/1e4, 'k:', lw=1)
-ax.plot(z_list, np.cumsum(E_other_total61100)/total_mocks/1e6, 'k--', lw=1)
-ax.plot(z_list, np.cumsum(E_other_total91100)/total_mocks/1e9, 'k-', lw=1)
+ax.plot(z_list, np.cumsum(results41100[3])/total_mocks/1e4, 'k:', lw=1)
+ax.plot(z_list, np.cumsum(results61100[3])/total_mocks/1e6, 'k--', lw=1)
+ax.plot(z_list, np.cumsum(results91100[3])/total_mocks/1e9, 'k-', lw=1)
 
 
 z_list = np.logspace(np.log10(30+1), np.log10(z_end+1), bins)-1.0
-ax2.plot(z_list, np.cumsum(E_other_total430)/total_mocks/1e4, 'k:', lw=1)
-ax2.plot(z_list, np.cumsum(E_other_total630)/total_mocks/1e6, 'k--', lw=1)
-ax2.plot(z_list, np.cumsum(E_other_total930)/total_mocks/1e9, 'k-', lw=1)
+ax2.plot(z_list, np.cumsum(results430[3])/total_mocks/1e4, 'k:', lw=1)
+ax2.plot(z_list, np.cumsum(results630[3])/total_mocks/1e6, 'k--', lw=1)
+ax2.plot(z_list, np.cumsum(results930[3])/total_mocks/1e9, 'k-', lw=1)
 z_list = np.logspace(np.log10(1100+1), np.log10(z_end+1), bins)-1.0
-ax2.plot(z_list, np.cumsum(E_other_total41100)/total_mocks/1e4, 'k:', lw=1)
-ax2.plot(z_list, np.cumsum(E_other_total61100)/total_mocks/1e6, 'k--', lw=1)
-ax2.plot(z_list, np.cumsum(E_other_total91100)/total_mocks/1e9, 'k-', lw=1)
+ax2.plot(z_list, np.cumsum(results41100[3])/total_mocks/1e4, 'k:', lw=1)
+ax2.plot(z_list, np.cumsum(results61100[3])/total_mocks/1e6, 'k--', lw=1)
+ax2.plot(z_list, np.cumsum(results91100[3])/total_mocks/1e9, 'k-', lw=1)
+
+
+
+ax.set_xlim(0,34) # outliers only
+ax2.set_xlim(100,1150) # most of the dat# a
+ax.set_ylim(-0.01,1.01) # outliers only
+ax2.set_ylim(-0.01,1.01) # outliers only
+
+# hide the spines between ax and ax2
+ax.spines['right'].set_visible(False)
+ax2.spines['left'].set_visible(False)
+# ax.xaxis.tick_top()
+ax2.tick_params(labeltop='off') # don't put tick labels at the top
+
+d = .015 # how big to make the diagonal lines in axes coordinates
+# arguments to pass plot, just so we don't keep repeating them
+kwargs = dict(transform=ax.transAxes, color='k', clip_on=False)
+ax.plot((1-d,1+d),(1-d,1+d), **kwargs)      # top-left diagonal
+ax.plot((1-d,1+d),(-d,+d), **kwargs)    # top-right diagonal
+
+kwargs.update(transform=ax2.transAxes)  # switch to the bottom axes
+ax2.plot((-d,+d),(-d,+d), **kwargs)   # bottom-left diagonal
+ax2.plot((-d,+d),(1-d,1+d), **kwargs)
+
+ax.set_ylabel(r'$\mathrm{Fraction}$')
+ax.set_xlabel(r'$\mathrm{Redshift}$')
+
+plt.subplots_adjust(wspace=0.1)
+
+#######################################
+
+results430 = runsim(1e6, 30, bins=bins)
+
+f,(ax,ax2) = plt.subplots(1,2,sharey=True)
+
+z_list = np.logspace(np.log10(30+1), np.log10(z_end+1), bins)-1.0
+ax.plot(z_list, np.cumsum(results430[3])/total_mocks/1e4, 'k:', lw=1)
+ax.plot(z_list, np.cumsum(results430[4])/total_mocks/1e4, 'k--', lw=1)
+ax.plot(z_list, np.cumsum(results430[5])/total_mocks/1e4, 'k-', lw=1)
+# z_list = np.logspace(np.log10(1100+1), np.log10(z_end+1), bins)-1.0
+# ax.plot(z_list, np.cumsum(results41100[3])/total_mocks/1e4, 'k:', lw=1)
+# ax.plot(z_list, np.cumsum(results41100[4])/total_mocks/1e4, 'k--', lw=1)
+# ax.plot(z_list, np.cumsum(results41100[5])/total_mocks/1e4, 'k-', lw=1)
+
+
+z_list = np.logspace(np.log10(30+1), np.log10(z_end+1), bins)-1.0
+ax2.plot(z_list, np.cumsum(results430[3])/total_mocks/1e4, 'k:', lw=1)
+ax2.plot(z_list, np.cumsum(results430[4])/total_mocks/1e4, 'k--', lw=1)
+ax2.plot(z_list, np.cumsum(results430[5])/total_mocks/1e4, 'k-', lw=1)
+# z_list = np.logspace(np.log10(1100+1), np.log10(z_end+1), bins)-1.0
+# ax2.plot(z_list, np.cumsum(results41100[3])/total_mocks/1e4, 'k:', lw=1)
+# ax2.plot(z_list, np.cumsum(results41100[4])/total_mocks/1e4, 'k--', lw=1)
+# ax2.plot(z_list, np.cumsum(results41100[5])/total_mocks/1e4, 'k-', lw=1)
 
 
 
@@ -288,11 +358,21 @@ plt.plot(z_list, np.cumsum(E_redshift_total61100)/total_mocks/1e6, 'k--', lw=1)
 bins=100
 total_mocks=1000
 
-E_ph_interaction_list = np.logspace(np.log10(13.61), 12, 30)
-Interaction_fraction = E_list.copy() * 0.0
-for i in range(len(E_list)):
+E_ph_interaction_list = np.concatenate([np.logspace(np.log10(13.61), 2, 100)[:-1], np.logspace(2, 12, 30)])
+Interaction_fraction = E_ph_interaction_list.copy() * 0.0
+Interaction_fraction_H = E_ph_interaction_list.copy() * 0.0
+Interaction_fraction_He = E_ph_interaction_list.copy() * 0.0
+for i in range(len(E_ph_interaction_list)):
     print i
-    results350, E_redshift_total430, E_remaining_total430, E_other_total430 = runsim(E_ph_interaction_list[i], 50, bins=bins)
-    Interaction_fraction[i] = np.sum(E_other_total430)/total_mocks/E_ph_interaction_list[i]
+    results350 = runsim(E_ph_interaction_list[i], 50, bins=bins)
+    Interaction_fraction[i] = np.sum(results350[3])/total_mocks/E_ph_interaction_list[i]
+    Interaction_fraction_H[i] = np.sum(results350[4])/total_mocks/E_ph_interaction_list[i]
+    Interaction_fraction_He[i] = np.sum(results350[5])/total_mocks/E_ph_interaction_list[i]
 
-np.savez('E_effective.npz', E_ph_interaction_list = E_ph_interaction_list, Interaction_fraction=Interaction_fraction)
+np.savez('E_effective.npz', E_ph_interaction_list = E_ph_interaction_list, Interaction_fraction=Interaction_fraction
+         , Interaction_fraction_H=Interaction_fraction_H
+         , Interaction_fraction_He=Interaction_fraction_He)
+
+plt.plot(E_ph_interaction_list, Interaction_fraction_H/13.6)
+plt.plot(E_ph_interaction_list, Interaction_fraction_He/24.4)
+plt.xscale('log')
