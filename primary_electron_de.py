@@ -76,7 +76,7 @@ results = np.zeros(len(E0_list), dtype=([('H_I_ion', 'f4'), ('H_I_ex', 'f4'),
                                          ('IC', 'f4')]))
 MC_N_list = np.zeros([len(E0_list)])
 
-for i_E in range(0,10):#len(E0_list)):
+for i_E in range(0,len(E0_list)):
     print i_E
     E0 = E0_list[i_E]
 
