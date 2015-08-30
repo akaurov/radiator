@@ -28,7 +28,8 @@ nb = cosmolopy.cden.baryon_densities(**cosmolopy.fidcosmo)[0] / cosmolopy.consta
 nb *= (1.0+delta)
 T = 10**4
 precision = 0.01
-accurate_cmb = True
+accurate_cmb = False
+cs = cross_sections(cs={'photion': 'VFKY1996', 'collion': 'AR', 'collex': 'SKD'})
 
 mass_abundance = np.zeros([10,10])
 mass_abundance[ 1, 1] = 0.754 * (1.0 - xiH)
@@ -50,7 +51,7 @@ CMBphotons = 8*np.pi*2*np.pi*hbar*nu_list**3/c**3/(np.exp(2.0*np.pi*hbar*nu_list
 N_CMB = np.trapz(CMBphotons, Eg_list)
 E_CMB_av = np.trapz(CMBphotons*Eg_list, Eg_list) / np.trapz(CMBphotons, Eg_list)
 print 'number of photons per cm^3: ', N_CMB
-print 'average CMB photon energy [eV]: ', E_CMB_av *6.24e11
+print 'average CMB photon energy [eV]: ', E_CMB_av * 6.24e11
 
 # tau_list = np.zeros([len(E0_list), 10000]) * np.nan
 # IC_total_list = np.zeros([len(E0_list), 10000])
@@ -117,32 +118,33 @@ for i_E in range(0, len(E0_list)):
                     v = c*np.sqrt(1.-1./gamma**2)
                     sigma_IC = np.zeros(len(Eg_list))
 
-                    eedEdt_now = eedEdt(electrons[i], nbe*(1+z)**3, T)
+                    eedEdt_now = cs.eedEdt(electrons[i], nbe*(1+z)**3, T)
                     # tau_ex = nbHI*(1+z)**3*sigmaHex(electrons[i])*v
                     # tau_ion = nbHI*(1+z)**3*sigmaHion(electrons[i])*v
-                    tau_ion = nbHI*(1+z)**3*sigma_AR(electrons[i]*6.24e11, mode='HI')*v
-                    tau_ex = nbHI*(1+z)**3*sigma_SKD(electrons[i]*6.24e11, mode='HI')*v
+                    tau_ion = nbHI*(1+z)**3*cs.HI_ion_e(electrons[i]*6.24e11)*v
+                    tau_ex = nbHI*(1+z)**3*cs.HI_ex_e(electrons[i]*6.24e11)*v
                     # tau_ex = nbHI*(1+z)**3*sigmaRBEQ(electrons[i], 13.6057, 13.6057, 1)*v/0.85
                     # tau_ion = nbHI*(1+z)**3*sigmaRBEQ(electrons[i], 13.6, 13.6, 1)*v
-                    tau_ex_HeI = nbHeI*(1+z)**3*sigmaHe(electrons[i], 'ex', 'I')*v
-                    tau_ion_HeI = nbHeI*(1+z)**3*sigmaHe(electrons[i], 'ion', 'I')*v
-                    tau_ex_HeII = nbHeII*(1+z)**3*sigmaHe(electrons[i], 'ex', 'II')*v
-                    tau_ion_HeII = nbHeII*(1+z)**3*sigmaHe(electrons[i], 'ion', 'II')*v
+                    tau_ex_HeI = nbHeI*(1+z)**3*cs.HeI_ion_e(electrons[i]*6.24e11)*v
+                    tau_ion_HeI = nbHeI*(1+z)**3*cs.HeI_ex_e(electrons[i]*6.24e11)*v
+                    tau_ex_HeII = nbHeII*(1+z)**3*cs.HeI_ion_e(electrons[i]*6.24e11)*v
+                    tau_ion_HeII = nbHeII*(1+z)**3*cs.HeI_ex_e(electrons[i]*6.24e11)*v
 
                     sigma_IC = np.zeros(len(Eg_list))
                     total_probability = 0
                     photons_particles_total_add = np.zeros(len(Eg_list))
+
                     if electrons[i]*6.24e11 > Eth_IC:
                         # accurate_cmb = electrons[i] < 1/6.24e11
                         if accurate_cmb:
                             for j1 in range(len(Eg_list)):
-                                sigma_temp = sigmakn(Eg_list, Eg_list[j1], gamma) * np.gradient(Eg_list)
+                                sigma_temp = cs.sigmakn(Eg_list, Eg_list[j1], gamma) * np.gradient(Eg_list)
                                 temp = sigma_temp * v * CMBphotons[j1] * np.gradient(Eg_list)[j1]
                                 probability = np.sum(temp*Eg_list)
                                 total_probability += probability
                                 photons_particles_total_add += temp
                         else:
-                            sigma_temp = sigmakn(Eg_list, E_CMB_av, gamma) * np.gradient(Eg_list)
+                            sigma_temp = cs.sigmakn(Eg_list, E_CMB_av, gamma) * np.gradient(Eg_list)
                             temp = sigma_temp * v * N_CMB
                             probability = np.sum(temp*Eg_list)
                             total_probability += probability
@@ -151,7 +153,7 @@ for i_E in range(0, len(E0_list)):
                     if electrons[i] > 1e6/6.24e11:
                         # Approximate mode
                         # tau = precision*min([1./tau_ex, 1./tau_ion, tau_IC, electrons[i]/eedEdt_now])
-                        secondary_energy = rhoE(np.array([electrons[i]]), 8.0/6.24e11)[0]
+                        secondary_energy = cs.rhoE(np.array([electrons[i]]), 8.0/6.24e11)[0]
                         energy_to_distribute = electrons[i] * precision
                         e_to_ex = tau_ex * 10.2 / 6.24e11
                         e_to_ion = tau_ion * 13.6/ 6.24e11
@@ -203,21 +205,21 @@ for i_E in range(0, len(E0_list)):
                                 coll_ex_HeII += 41.0 / 6.24e11
                         if electrons[i] > 13.6 / 6.24e11:
                             if rand_a[3] < tau_ion*tau:
-                                temp = rhoE(np.array([electrons[i]]), 8.0/6.24e11)[0]
+                                temp = cs.rhoE(np.array([electrons[i]]), 8.0/6.24e11)[0]
                                 electrons[i] -= 13.6 / 6.24e11
                                 electrons[i] = electrons[i]-temp
                                 electrons = np.append(electrons, temp)
                                 coll_ion += 13.6 / 6.24e11
                         if electrons[i] > 24.6 / 6.24e11:
                             if rand_a[4] < tau_ion_HeI*tau:
-                                temp = rhoE(np.array([electrons[i]]), 8.0/6.24e11)[0]
+                                temp = cs.rhoE(np.array([electrons[i]]), 8.0/6.24e11)[0]
                                 electrons[i] -= 24.6 / 6.24e11
                                 electrons[i] = electrons[i]-temp
                                 electrons = np.append(electrons, temp)
                                 coll_ion_HeI += 24.6 / 6.24e11
                         if electrons[i] > 54.4 / 6.24e11:
                             if rand_a[5] < tau_ion_HeII*tau:
-                                temp = rhoE(np.array([electrons[i]]), 8.0/6.24e11)[0]
+                                temp = cs.rhoE(np.array([electrons[i]]), 8.0/6.24e11)[0]
                                 electrons[i] -= 54.4 / 6.24e11
                                 electrons[i] = electrons[i]-temp
                                 electrons = np.append(electrons, temp)

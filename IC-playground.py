@@ -67,7 +67,7 @@ photons_particles_add = np.zeros(len(Eg_list))
 for j in range(200):
     chances = np.random.random([len(electrons), 2])
     for i in range(len(electrons)):
-        if electrons[i]>10**5.42 / 6.24e11:
+        if electrons[i]>10**3 / 6.24e11:
             gamma = ((me*c**2)+electrons[i]) / (me*c**2)
             sigma_IC = np.zeros(len(Eg_list))
             photons_particles_add = np.zeros(len(Eg_list))
@@ -95,7 +95,7 @@ for j in range(200):
             photons_particles += photons_particles_add
             electrons_minus *= tau
             electrons[i] -= electrons_minus
-            electronB -= tau*2.3e-13*1e9/6.24e11*(1+z)**4*(electronB*6.24e11/100e9)**2
+            electronB -= tau*2.3e-13*1e9/6.24e11*(1+z)**4*((electronB*6.24e11+0.511e6)/100e9)**2
             print tau, np.log10(electrons[0]*6.24e11), np.log10(electronB*6.24e11)
     # if j % 200 == 199:
     #     plt.plot(EgeV_list, photons_particles/np.gradient(Eg_list)*Eg_list**2)
