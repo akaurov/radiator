@@ -46,14 +46,14 @@ electrons[0] = 1e8 / 6.24e11
 
 
 electrons = np.zeros(1)
-E00 = 1e8
+E00 = 1e5
 electrons[0] = E00 / 6.24e11
 
 electronB = electrons[0]
 
 # electrons /= np.trapz(electrons, Eg_list)
 # print 'number of electrons per cm^3: ', np.trapz(electrons, Eg_list)
-z=100
+z=600
 T_CMB=2.7*(1+z)
 
 CMBphotons = 8*np.pi*2*np.pi*hbar*nu_list**3/c**3/(np.exp(2.0*np.pi*hbar*nu_list/kB/T_CMB)-1.0)/Eg_list/(hbar*2*np.pi)
