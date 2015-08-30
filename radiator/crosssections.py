@@ -116,6 +116,13 @@ def eedEdt(E, ne, T):
     return 4. * np.pi * ne * 4.8e-10**4 / 9.1e-28 / omega * lnL
 
 def sigmakn(Eg, e, gamma):
+    '''
+
+    :param Eg:
+    :param e:
+    :param gamma:
+    :return:
+    '''
     Gamma = 4*e*gamma/me/c**2
     eta = e*Eg/(me*c**2)**2
     q = Eg/Gamma/(gamma*me*c**2-Eg)
@@ -124,3 +131,131 @@ def sigmakn(Eg, e, gamma):
     G[(4*gamma**2)**-1 > q] = 0
     G[q > 1] = 0
     return 3.0*sigmaT/4.0/e/gamma**2*G
+
+
+def sigmaBEQ(T, B, U, N, Q=1.0):
+    '''
+    Eq. 8 Phys.Rev. A 62 052710 http://journals.aps.org/pra/pdf/10.1103/PhysRevA.62.052710
+    Non-relativistic equation
+    :param T: the energy of incident electron
+    :param B: the binding energy
+    :param U: the orbital kinetic energy
+    :param N: the electron occupation number
+    :param Q: a dipole constant
+    :return:
+    '''
+    t = T/B
+    u = U/B
+    a0 = 0.52918e-8 # cm
+    R = 13.6057 # eV
+    S = 4.0*np.pi*a0**2.0*N*(R/B)**2
+    n = 1
+    res = S/(t+(u+1.0)/n)*(Q*np.log(t)/2.0*(1.0-1.0/t**2)+(2.0-Q)*(1.0-1.0/t-np.log(t)/(t+1.0)))
+    return res
+
+
+def sigmaRBEQ(T, B, U, N, Q=1.0):
+    '''
+    Eq. 21 Phys.Rev. A 62 052710 http://journals.aps.org/pra/pdf/10.1103/PhysRevA.62.052710
+    Relativistic equation
+    :param T: the energy of incident electron
+    :param B: the binding energy
+    :param U: the orbital kinetic energy
+    :param N: the electron occupation number
+    :param Q: a dipole constant
+    :return:
+    '''
+    alpha = 1./137.0365999173
+    mec2 = 0.511e6 # electron mass in eV
+    tprime = T/mec2
+    betat = np.sqrt(1.0-1.0/(1.0+tprime)**2) # Eq. 12
+    bprime = B/mec2
+    betab = np.sqrt(1.0-1.0/(1.0+bprime)**2) # Eq. 13
+    uprime = U/mec2
+    betau = np.sqrt(1.0-1.0/(1.0+uprime)**2) # Eq. 14
+    t = T/B
+    u = U/B
+    a0 = 0.52918e-8 # cm
+    R = 13.6057 # eV
+    n = 1
+    res = 4.0*np.pi*a0**2*alpha**4*N / \
+          ((betat**2+betau**2+betab**2)*2*bprime) * \
+          ( \
+              Q/2.0*(np.log(betat**2/(1.0-betat**2)) - betat**2 - np.log(2.0*bprime)) * \
+              (1.0-1.0/t**2) + \
+              (2.0-Q) * \
+              (1.0-1.0/t-np.log(t)/(t+1.0)*(1.0+2.0*tprime)/(1.0+tprime/2.0)**2+bprime**2/(1.0+tprime/2.0)**2*(t-1.0)/2.0) \
+          )
+    if len(T)>1:
+        res[T <= B]=0
+    else:
+        if T<=B:
+            res=0
+    return res
+
+def sigmabe(T, B, U, N, Q=1.0):
+    return sigmaBEQ(T, B, U, N, Q)*T/(T+B+U)
+
+
+def sigma_AR(E, mode):
+    '''
+    Hydrogen collisional ionization as in: http://xxx.lanl.gov/pdf/0906.1197v2.pdf
+    Equation B4
+    :param E: the energy of the electron in eV
+    :return:
+    '''
+    if mode == 'HI':
+        A=22.8
+        B=-12.0
+        C=1.9
+        D=-22.6
+        I=13.6
+    if mode == 'HeI':
+        A=17.8
+        B=-11.0
+        C=7.0
+        D=-23.2
+        I=24.6
+    if mode == 'HeII':
+        A=14.4
+        B=-5.6
+        C=1.9
+        D=-13.3
+        I=54.4
+    R=13.6
+    a0=0.529e-8
+    u=E/I
+    res = 1e-14/(u*I**2)*(A*(1.0-1.0/u)+B*(1.0-1.0/u)**2+C*np.log(u)+D*np.log(u)/u)
+    if len(res)>1:
+        res[E <= I] = 0.0
+    else:
+        if E <= I:
+            res=0
+    return res
+
+def sigma_SKD(E, mode):
+    '''
+    Hydrogen collisional ionization as in: http://xxx.lanl.gov/pdf/0906.1197v2.pdf
+    Equation B5
+    :param E: the energy of the electron in eV
+    :return:
+    '''
+    if mode == 'HI':
+        A=0.5555
+        B=0.2718
+        C=0.0001
+        Ebin=13.6
+        Eexc=10.2
+    if mode == 'HeI':
+        A=0.1771
+        B=-0.0822
+        C=0.0356
+    R=13.6
+    a0=0.529e-8
+    res = 4*a0**2*R/(E+Ebin+Eexc)*(A*np.log(E/R)+B+C*R/E)
+    if len(res)>1:
+        res[E <= Eexc] = 0.0
+    else:
+        if E <= Eexc:
+            res=0
+    return res

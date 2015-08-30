@@ -203,9 +203,9 @@ def runsim(E_ph_initial, z_start, bins=100):
 bins=1000
 total_mocks=1000
 
-results430 = runsim(1e4, 30, bins=bins)
-results630 = runsim(1e6, 30, bins=bins)
-results930 = runsim(1e9, 30, bins=bins)
+results430 = runsim(1e4, 50, bins=bins)
+results630 = runsim(1e6, 50, bins=bins)
+results930 = runsim(1e9, 50, bins=bins)
 
 results41100 = runsim(1e4, 1100, bins=bins)
 results61100 = runsim(1e6, 1100, bins=bins)
@@ -217,7 +217,7 @@ print E_redshift_total, E_remaining_total, E_other_total
 
 f,(ax,ax2) = plt.subplots(1,2,sharey=True)
 
-z_list = np.logspace(np.log10(30+1), np.log10(z_end+1), bins)-1.0
+z_list = np.logspace(np.log10(50+1), np.log10(z_end+1), bins)-1.0
 ax.plot(z_list, np.cumsum(results430[3])/total_mocks/1e4, 'k:', lw=1)
 ax.plot(z_list, np.cumsum(results630[3])/total_mocks/1e6, 'k--', lw=1)
 ax.plot(z_list, np.cumsum(results930[3])/total_mocks/1e9, 'k-', lw=1)
@@ -227,7 +227,7 @@ ax.plot(z_list, np.cumsum(results61100[3])/total_mocks/1e6, 'k--', lw=1)
 ax.plot(z_list, np.cumsum(results91100[3])/total_mocks/1e9, 'k-', lw=1)
 
 
-z_list = np.logspace(np.log10(30+1), np.log10(z_end+1), bins)-1.0
+z_list = np.logspace(np.log10(50+1), np.log10(z_end+1), bins)-1.0
 ax2.plot(z_list, np.cumsum(results430[3])/total_mocks/1e4, 'k:', lw=1)
 ax2.plot(z_list, np.cumsum(results630[3])/total_mocks/1e6, 'k--', lw=1)
 ax2.plot(z_list, np.cumsum(results930[3])/total_mocks/1e9, 'k-', lw=1)
@@ -238,7 +238,7 @@ ax2.plot(z_list, np.cumsum(results91100[3])/total_mocks/1e9, 'k-', lw=1)
 
 
 
-ax.set_xlim(0,34) # outliers only
+ax.set_xlim(0,54) # outliers only
 ax2.set_xlim(100,1150) # most of the dat# a
 ax.set_ylim(-0.01,1.01) # outliers only
 ax2.set_ylim(-0.01,1.01) # outliers only
@@ -259,10 +259,12 @@ kwargs.update(transform=ax2.transAxes)  # switch to the bottom axes
 ax2.plot((-d,+d),(-d,+d), **kwargs)   # bottom-left diagonal
 ax2.plot((-d,+d),(1-d,1+d), **kwargs)
 
-ax.set_ylabel(r'$\mathrm{Fraction}$')
+ax.set_ylabel(r'$\mathrm{Absorbed\; energy\; fraction}$')
 ax.set_xlabel(r'$\mathrm{Redshift}$')
 
 plt.subplots_adjust(wspace=0.1)
+
+plt.savefig('photon_ans.pdf')
 
 #######################################
 
