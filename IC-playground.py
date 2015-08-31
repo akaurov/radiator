@@ -9,6 +9,11 @@ c = 2.9979e10 # cm/s
 hbar = 1.0545e-27 # erg*s
 kB = 1.380648e-16 # erg/K
 
+
+from radiator.crosssections import *
+
+cs = cross_sections()
+
 def sigmakn(Eg, e, gamma):
     Gamma = 4*e*gamma/me/c**2
     eta = e*Eg/(me*c**2)**2
@@ -28,7 +33,7 @@ Eg_list = np.logspace(-6, 12, 1000)/6.24e11
 nu_list = Eg_list / (hbar*2*np.pi)
 EgeV_list = Eg_list*6.24e11
 
-z = 15.0
+z = 600.0
 T_CMB = 2.7*(1.0+z)
 nb = (1.0+z)**3*2.2e-7
 # T_list=np.array([1000])
@@ -46,7 +51,7 @@ electrons[0] = 1e8 / 6.24e11
 
 
 electrons = np.zeros(1)
-E00 = 1e5
+E00 = 1e4
 electrons[0] = E00 / 6.24e11
 
 electronB = electrons[0]
@@ -69,11 +74,12 @@ for j in range(200):
     for i in range(len(electrons)):
         if electrons[i]>10**3 / 6.24e11:
             gamma = ((me*c**2)+electrons[i]) / (me*c**2)
+            v = c*np.sqrt(1.-1./gamma**2)
             sigma_IC = np.zeros(len(Eg_list))
             photons_particles_add = np.zeros(len(Eg_list))
             electrons_minus = 0
             for j1 in range(len(photons)):
-                sigma_temp = sigmakn(Eg_list, Eg_list[j1], gamma) * np.gradient(Eg_list)
+                sigma_temp = cs.sigmakn(Eg_list, Eg_list[j1], gamma) * np.gradient(Eg_list)
                 # sigma_IC[j1] = np.trapz(sigma_temp, Eg_list)
                 # sigma_IC_total = sigma_IC[j1]*CMBphotons[j1]*np.gradient(Eg_list)[j1]
                 # probability = sigma_IC_total * c * tau

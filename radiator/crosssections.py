@@ -240,11 +240,13 @@ class cross_sections:
 
     def sigmakn(self, Eg, e, gamma):
         '''
-
-        :param Eg:
-        :param e:
-        :param gamma:
-        :return:
+        Klein-Nishina cross section. Follows the notation of this paper:
+        http://www.aanda.org/articles/aa/pdf/2009/21/aa11596-08.pdf
+        However we do not use their approximation scheme.
+        :param Eg: The initial energy of a photon in ergs.
+        :param e: The energy of a photon after the interaction in ergs.
+        :param gamma: Lorenz factor of the electron.
+        :return: cross section in cm^{-2}
         '''
         Gamma = 4*e*gamma/me/c**2
         eta = e*Eg/(me*c**2)**2

@@ -17,6 +17,7 @@ c = 2.9979e10 # cm/s
 hbar = 1.0545e-27 # erg*s
 kB = 1.380648e-16 # erg/K
 
+cs = cross_sections(cs={'photion': 'VFKY1996', 'collion': 'AR', 'collex': 'SKD'})
 
 Eg_list = np.logspace(-2, 12, 1000)/6.24e11
 temp = np.zeros([len(Eg_list), 4])
@@ -34,13 +35,13 @@ plt.plot(EgeV_list, factor*1e-24, '-', lw=1, label='H cross total')
 s = InterpolatedUnivariateSpline(np.log10(crossectionsO[:,0]), np.log10(crossectionsO[:,-1]), k=1)
 factor = 10**s(np.log10(EgeV_list/1e6))
 plt.plot(EgeV_list, factor*1e-24, '-', lw=1, label='O cross total')
-plt.plot(EgeV_list, sigmaX(EgeV_list, 1, 1)*1e-18, label='H phot 1996')
-plt.plot(EgeV_list, sigmaX(EgeV_list, 8, 8)*1e-18, label='O phot 1996')
+plt.plot(EgeV_list, cs.sigmaX(EgeV_list, 1, 1)*1e-18, label='H phot 1996')
+plt.plot(EgeV_list, cs.sigmaX(EgeV_list, 8, 8)*1e-18, label='O phot 1996')
 plt.xscale('log')
 plt.yscale('log')
 plt.legend()
 
-plt.plot(EgeV_list, sigmaX(EgeV_list, 1, 1) / sigmaX(EgeV_list, 8, 8))
+plt.plot(EgeV_list, cs.sigmaX(EgeV_list, 1, 1) / cs.sigmaX(EgeV_list, 8, 8))
 plt.xscale('log')
 plt.yscale('log')
 
@@ -155,9 +156,9 @@ def runsim(E_ph_initial, z_start, bins=100):
                 chance_pp = 1.0 - np.exp(-temp_factor)
 
             # photoion
-            opt_dep_photoion_H = (sigmaX([E_ph], 1, 1)[0]*1e-18*N_H)
-            opt_dep_photoion_He = (sigmaX([E_ph], 2, 2)[0]*1e-18*N_He)
-            opt_dep_photoion_O = (sigmaX([E_ph], 8, 8)[0]*1e-18*N_O)
+            opt_dep_photoion_H = (cs.sigmaX([E_ph], 1, 1)[0]*1e-18*N_H)
+            opt_dep_photoion_He = (cs.sigmaX([E_ph], 2, 2)[0]*1e-18*N_He)
+            opt_dep_photoion_O = (cs.sigmaX([E_ph], 8, 8)[0]*1e-18*N_O)
             chance_photoion_H = 1.0 - np.exp(-opt_dep_photoion_H)
             chance_photoion_He = 1.0 - np.exp(-opt_dep_photoion_He)
             chance_photoion_O = 1.0 - np.exp(-opt_dep_photoion_O)
