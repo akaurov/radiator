@@ -19,7 +19,7 @@ kB = 1.380648e-16 # erg/K
 
 # Do electrons-photons interactions
 E0_list = np.logspace(1, 12, 250)
-z = 600.0
+z = 50.0
 Eth_IC = 1e3
 delta = 0.0
 T_CMB = 2.73*(1+z)
@@ -42,7 +42,7 @@ nbHeI = mass_abundance[ 2, 2] * nb / 4.0
 nbHeII = mass_abundance[ 2, 1] * nb / 4.0
 nbe = mass_abundance[ 1, 0] * nb + mass_abundance[ 2, 1] * nb / 4.0 + mass_abundance[ 2, 0] * nb / 4.0
 
-Eg_list = np.logspace(-6, np.log10(E0_list.max()), 1000)/6.24e11
+Eg_list = np.logspace(-6, np.log10(E0_list.max()), 100)/6.24e11
 EgeV_list = Eg_list*6.24e11
 
 nu_list = Eg_list / (hbar*2*np.pi)
@@ -82,13 +82,13 @@ for i_E in range(0, len(E0_list)):
     E0 = E0_list[i_E]
 
     if E0 < 1e2:
-        MC_N = 100
+        MC_N = 1000
         precision = 0.01
     elif E0 < 1e5:
-        MC_N = 10
+        MC_N = 100
         precision = 0.01
     else:
-        MC_N = 1
+        MC_N = 10
         precision = 0.01
 
     MC_N_list[i_E] = MC_N
