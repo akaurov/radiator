@@ -20,8 +20,8 @@ kB = 1.380648e-16 # erg/K
 # Do electrons-photons interactions
 E0_list = np.logspace(1, 12, 250)
 z = 50.0
-Eth_IC = 1e3
-delta = 0.0
+Eth_IC = 1e2
+delta = 1000000.0
 T_CMB = 2.73*(1+z)
 xiH = 0.01
 nb = cosmolopy.cden.baryon_densities(**cosmolopy.fidcosmo)[0] / cosmolopy.constants.Mpc_cm**3 * cosmolopy.constants.M_sun_g / cosmolopy.constants.m_p_g * 0.04
@@ -82,13 +82,13 @@ for i_E in range(0, len(E0_list)):
     E0 = E0_list[i_E]
 
     if E0 < 1e2:
-        MC_N = 1000
-        precision = 0.01
-    elif E0 < 1e5:
         MC_N = 100
         precision = 0.01
-    else:
+    elif E0 < 1e5:
         MC_N = 10
+        precision = 0.01
+    else:
+        MC_N = 1
         precision = 0.01
 
     MC_N_list[i_E] = MC_N
@@ -150,13 +150,13 @@ for i_E in range(0, len(E0_list)):
                             total_probability += probability
                             photons_particles_total_add += temp
 
-                    if electrons[i] > 1e6/6.24e11:
+                    if electrons[i] > 1e5/6.24e11:
                         # Approximate mode
                         # tau = precision*min([1./tau_ex, 1./tau_ion, tau_IC, electrons[i]/eedEdt_now])
                         secondary_energy = cs.rhoE(np.array([electrons[i]]), 8.0/6.24e11)[0]
                         energy_to_distribute = electrons[i] * precision
                         e_to_ex = tau_ex * 10.2 / 6.24e11
-                        e_to_ion = tau_ion * 13.6/ 6.24e11
+                        e_to_ion = tau_ion * 13.6 / 6.24e11
                         e_to_sec = tau_ion * secondary_energy
                         e_to_ee = eedEdt_now
                         e_to_ic = total_probability
@@ -271,7 +271,7 @@ for i_E in range(0, len(E0_list)):
     print E0#, np.sum((results[i_E]))
 
 
-np.savez('output/%05i-%01.5f-%08.1f-snap.npz'%(z,xiH,delta), E0_list=E0_list, results=results, photons_particles_all=photons_particles_all, Eg_list=Eg_list, EgeV_list=EgeV_list)
+np.savez('output/%05i-%01.5f-%08.1f-snap'%(z,xiH,delta) + '_'+cs.cs['collion']+'_'+cs.cs['collex']+'_'+cs.cs['photion'] +'.npz', E0_list=E0_list, results=results, photons_particles_all=photons_particles_all, Eg_list=Eg_list, EgeV_list=EgeV_list)
 
 # plt.plot(E0_list, np.sum(results[:, 1:4], 1))
 # plt.plot(E0_list, results['ee'],'--k')
@@ -286,7 +286,7 @@ plt.plot(E0_list, results['IC'], '-')
 # plt.plot(E0_list, results[:, 2])
 # plt.plot(E0_list, results[:, 3])
 plt.xscale('log')
-# plt.yscale('log')
+plt.yscale('log')
 plt.plot(E0_list, results['H_I_ion']+results['H_I_ex']+results['He_I_ion']+results['He_I_ex']+results['He_II_ion']+results['He_II_ex']+results['ee'], '--k')
 plt.plot(E0_list, results['IC'], '-')
 plt.plot([1e1,1e2,1e3,1e4,1e5,1e6], [0,0,0,0.35,0.85,1.0],'o')
