@@ -69,7 +69,8 @@ def define_figure_style(mode='lines', c='w'):
     mpl.rcParams["text.latex.preamble"].append(r'\usepackage[dvips]{graphicx}\usepackage{xfrac}\usepackage{amssymb}')
     mpl.rcParams['xtick.labelsize']=10
     mpl.rcParams['ytick.labelsize']=10
-    mpl.rcParams['figure.dpi']=150
+    mpl.rcParams['figure.dpi']=300
+    mpl.rcParams['savefig.dpi']=300
     mpl.rcParams['legend.numpoints']=1
     mpl.rcParams['legend.fontsize']='small'
     if c=='w':
