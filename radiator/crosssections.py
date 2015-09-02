@@ -30,6 +30,9 @@ class cross_sections:
     hbar = 1.0545e-27 # erg*s
     kB = 1.380648e-16 # erg/K
 
+    const_HI_ion = 13.6057
+    const_HeI_ion = 24.5874
+    const_HeII_ion = 54.41776
     #
     # Photoionization cross sections
     #
@@ -107,6 +110,11 @@ class cross_sections:
         S = 4.0*np.pi*a0**2.0*N*(R/B)**2
         n = 1
         res = S/(t+(u+1.0)/n)*(Q*np.log(t)/2.0*(1.0-1.0/t**2)+(2.0-Q)*(1.0-1.0/t-np.log(t)/(t+1.0)))
+        if not isinstance(res, float):
+            res[T <= B]=0
+        else:
+            if T<=B:
+                res=0
         return res
 
     def sigmaRBEQ(self, T, B, U, N, Q=1.0):
@@ -157,9 +165,9 @@ class cross_sections:
         if self.cs['collion'] == 'AR':
             return self.sigma_AR(E, mode='HI')
         if self.cs['collion'] == 'BEQ':
-            return self.sigmaBEQ(E, 13.6, 13.6, 1)
+            return self.sigmaBEQ(E, self.const_HI_ion, self.const_HI_ion, 1)
         if self.cs['collion'] == 'RBEQ':
-            return self.sigmaRBEQ(E, 13.6, 13.6, 1)
+            return self.sigmaRBEQ(E, self.const_HI_ion, self.const_HI_ion, 1)
 
     def HeI_ion_e(self, E):
         '''
@@ -170,9 +178,9 @@ class cross_sections:
         if self.cs['collion'] == 'AR':
             return self.sigma_AR(E, mode='HeI')
         if self.cs['collion'] == 'BEQ':
-            return self.sigma_AR(E, mode='HeI') # TODO fix BEQ for He
+            return self.sigmaBEQ(E, self.const_HeI_ion, self.const_HeI_ion, 2)
         if self.cs['collion'] == 'RBEQ':
-            return self.sigma_AR(E, mode='HeI') # TODO fix BEQ for He
+            return self.sigmaRBEQ(E, self.const_HeI_ion, self.const_HeI_ion4, 2)
 
     def HeII_ion_e(self, E):
         '''
@@ -183,10 +191,9 @@ class cross_sections:
         if self.cs['collion'] == 'AR':
             return self.sigma_AR(E, mode='HeII')
         if self.cs['collion'] == 'BEQ':
-            return self.sigma_AR(E, mode='HeII') # TODO fix BEQ for He
+            return self.sigmaBEQ(E, self.const_HeII_ion, self.const_HeII_ion, 1)
         if self.cs['collion'] == 'RBEQ':
-            return self.sigma_AR(E, mode='HeII') # TODO fix BEQ for He
-
+            return self.sigmaRBEQ(E, self.const_HeII_ion, self.const_HeII_ion4, 1)
 
     def sigma_SKD(self, E, mode):
         '''
