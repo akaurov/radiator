@@ -169,6 +169,10 @@ class cross_sections:
         '''
         if self.cs['collion'] == 'AR':
             return self.sigma_AR(E, mode='HeI')
+        if self.cs['collion'] == 'BEQ':
+            return self.sigma_AR(E, mode='HeI') # TODO fix BEQ for He
+        if self.cs['collion'] == 'RBEQ':
+            return self.sigma_AR(E, mode='HeI') # TODO fix BEQ for He
 
     def HeII_ion_e(self, E):
         '''
@@ -178,6 +182,11 @@ class cross_sections:
         '''
         if self.cs['collion'] == 'AR':
             return self.sigma_AR(E, mode='HeII')
+        if self.cs['collion'] == 'BEQ':
+            return self.sigma_AR(E, mode='HeII') # TODO fix BEQ for He
+        if self.cs['collion'] == 'RBEQ':
+            return self.sigma_AR(E, mode='HeII') # TODO fix BEQ for He
+
 
     def sigma_SKD(self, E, mode):
         '''
