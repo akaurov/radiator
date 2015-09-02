@@ -1,9 +1,12 @@
+#!python
+
+import sys
+
 import numpy as np
 import cosmolopy
 import matplotlib.pyplot as plt
 
 from radiator.figurestyle import *
-# from rstat.crossections import sigmaH
 define_figure_style()
 # http://arxiv.org/pdf/0807.1969.pdf
 
@@ -19,17 +22,17 @@ kB = 1.380648e-16 # erg/K
 
 # Do electrons-photons interactions
 E0_list = np.logspace(1, 12, 250)
-z = 50.0
+z = float(sys.argv[1])
 Eth_IC = 1e2
-delta = 1000000.0
+delta = float(sys.argv[2])
 T_CMB = 2.73*(1+z)
-xiH = 0.01
+xiH = float(sys.argv[3])
 nb = cosmolopy.cden.baryon_densities(**cosmolopy.fidcosmo)[0] / cosmolopy.constants.Mpc_cm**3 * cosmolopy.constants.M_sun_g / cosmolopy.constants.m_p_g * 0.04
 nb *= (1.0+delta)
 T = 10**4
 precision = 0.01
 accurate_cmb = False
-cs = cross_sections(cs={'photion': 'VFKY1996', 'collion': 'RBEQ', 'collex': 'RBEQ'})
+cs = cross_sections(cs={'photion': sys.argv[4], 'collion': sys.argv[5], 'collex': sys.argv[6]})
 
 mass_abundance = np.zeros([10,10])
 mass_abundance[ 1, 1] = 0.754 * (1.0 - xiH)
