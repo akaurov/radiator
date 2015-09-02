@@ -141,7 +141,7 @@ class cross_sections:
                   (2.0-Q) * \
                   (1.0-1.0/t-np.log(t)/(t+1.0)*(1.0+2.0*tprime)/(1.0+tprime/2.0)**2+bprime**2/(1.0+tprime/2.0)**2*(t-1.0)/2.0) \
               )
-        if len(T)>1:
+        if not isinstance(res, float):
             res[T <= B]=0
         else:
             if T<=B:
