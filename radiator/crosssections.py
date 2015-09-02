@@ -31,8 +31,11 @@ class cross_sections:
     kB = 1.380648e-16 # erg/K
 
     const_HI_ion = 13.6057
+    const_HI_ex = 10.2
     const_HeI_ion = 24.5874
+    const_HeI_ex = 21.22
     const_HeII_ion = 54.41776
+    const_HeII_ex = 40.82
     #
     # Photoionization cross sections
     #
@@ -180,7 +183,7 @@ class cross_sections:
         if self.cs['collion'] == 'BEQ':
             return self.sigmaBEQ(E, self.const_HeI_ion, self.const_HeI_ion, 2)
         if self.cs['collion'] == 'RBEQ':
-            return self.sigmaRBEQ(E, self.const_HeI_ion, self.const_HeI_ion4, 2)
+            return self.sigmaRBEQ(E, self.const_HeI_ion, self.const_HeI_ion, 2)
 
     def HeII_ion_e(self, E):
         '''
@@ -193,7 +196,7 @@ class cross_sections:
         if self.cs['collion'] == 'BEQ':
             return self.sigmaBEQ(E, self.const_HeII_ion, self.const_HeII_ion, 1)
         if self.cs['collion'] == 'RBEQ':
-            return self.sigmaRBEQ(E, self.const_HeII_ion, self.const_HeII_ion4, 1)
+            return self.sigmaRBEQ(E, self.const_HeII_ion, self.const_HeII_ion, 1)
 
     def sigma_SKD(self, E, mode):
         '''
@@ -206,15 +209,15 @@ class cross_sections:
             A=0.5555
             B=0.2718
             C=0.0001
-            Ebin=13.6
-            Eexc=10.2
+            Ebin=self.const_HI_ion
+            Eexc=self.const_HI_ex
         if mode == 'HeI':
             A=0.1771
             B=-0.0822
             C=0.0356
-            Ebin=24.6
-            Eexc=20.0 # TODO Fix this!!!
-        R=13.6
+            Ebin=self.const_HeI_ion
+            Eexc=self.const_HeI_ex
+        R=self.const_HI_ion
         a0=0.529e-8
         res = 4*a0**2*R/(E+Ebin+Eexc)*(A*np.log(E/R)+B+C*R/E)
         if not isinstance(res, float):
@@ -232,6 +235,8 @@ class cross_sections:
         '''
         if self.cs['collex'] == 'SKD':
             return self.sigma_SKD(E, mode='HI')
+        if self.cs['collex'] == 'RBEQ':
+            return self.sigmaRBEQ(E, 10.2, 0.5, 1./6.0)
 
     def HeI_ex_e(self, E):
         '''
@@ -241,6 +246,8 @@ class cross_sections:
         '''
         if self.cs['collex'] == 'SKD':
             return self.sigma_SKD(E, mode='HeI')
+        if self.cs['collex'] == 'RBEQ':
+            return self.sigmaRBEQ(E, 21.2, 0.5, 1./10.0)
 
     def eedEdt(self, E, ne, T):
         '''

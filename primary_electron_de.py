@@ -29,7 +29,7 @@ nb *= (1.0+delta)
 T = 10**4
 precision = 0.01
 accurate_cmb = False
-cs = cross_sections(cs={'photion': 'VFKY1996', 'collion': 'AR', 'collex': 'SKD'})
+cs = cross_sections(cs={'photion': 'VFKY1996', 'collion': 'RBEQ', 'collex': 'RBEQ'})
 
 mass_abundance = np.zeros([10,10])
 mass_abundance[ 1, 1] = 0.754 * (1.0 - xiH)
