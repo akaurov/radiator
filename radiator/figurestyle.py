@@ -32,8 +32,8 @@ def fixlogax(ax, a='x'):
     if a == 'x':
         labels = [item.get_text() for item in ax.get_xticklabels()]
         positions = ax.get_xticks()
-        print positions
-        print labels
+        # print positions
+        # print labels
         for i in range(len(positions)):
             labels[i] = '$10^{'+str(int(np.log10(positions[i])))+'}$'
         if np.size(np.where(positions == 1)) > 0:
@@ -42,14 +42,14 @@ def fixlogax(ax, a='x'):
             labels[np.where(positions == 10)[0][0]] = '$10$'
         if np.size(np.where(positions == 0.1)) > 0:
             labels[np.where(positions == 0.1)[0][0]] = '$0.1$'
-        print positions
-        print labels
+        # print positions
+        # print labels
         ax.set_xticklabels(labels)
     if a == 'y':
         labels = [item.get_text() for item in ax.get_yticklabels()]
         positions = ax.get_yticks()
-        print positions
-        print labels
+        # print positions
+        # print labels
         for i in range(len(positions)):
             labels[i] = '$10^{'+str(int(np.log10(positions[i])))+'}$'
         if np.size(np.where(positions == 1)) > 0:
@@ -58,8 +58,8 @@ def fixlogax(ax, a='x'):
             labels[np.where(positions == 10)[0][0]] = '$10$'
         if np.size(np.where(positions == 0.1)) > 0:
             labels[np.where(positions == 0.1)[0][0]] = '$0.1$'
-        print positions
-        print labels
+        # print positions
+        # print labels
         ax.set_yticklabels(labels)
 
 def define_figure_style(mode='lines', c='w'):
