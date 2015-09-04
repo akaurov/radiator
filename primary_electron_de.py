@@ -21,7 +21,7 @@ hbar = 1.0545e-27 # erg*s
 kB = 1.380648e-16 # erg/K
 
 # Do electrons-photons interactions
-E0_list = np.logspace(1, 12, 250)
+E0_list = np.logspace(1, 7, 250)
 z = float(sys.argv[1])
 Eth_IC = 1e2
 delta = float(sys.argv[2])
@@ -87,11 +87,11 @@ for i_E in range(0, len(E0_list)):
     if E0 < 1e2:
         MC_N = 100
         precision = 0.01
-    elif E0 < 1e5:
-        MC_N = 10
+    elif E0 < 1e3:
+        MC_N = 100
         precision = 0.01
     else:
-        MC_N = 1
+        MC_N = 100
         precision = 0.01
 
     MC_N_list[i_E] = MC_N
@@ -130,8 +130,8 @@ for i_E in range(0, len(E0_list)):
                     # tau_ion = nbHI*(1+z)**3*sigmaRBEQ(electrons[i], 13.6, 13.6, 1)*v
                     tau_ex_HeI = nbHeI*(1+z)**3*cs.HeI_ion_e(electrons[i]*6.24e11)*v
                     tau_ion_HeI = nbHeI*(1+z)**3*cs.HeI_ex_e(electrons[i]*6.24e11)*v
-                    tau_ex_HeII = nbHeII*(1+z)**3*cs.HeI_ion_e(electrons[i]*6.24e11)*v
-                    tau_ion_HeII = nbHeII*(1+z)**3*cs.HeI_ex_e(electrons[i]*6.24e11)*v
+                    tau_ex_HeII = nbHeII*(1+z)**3*cs.HeII_ion_e(electrons[i]*6.24e11)*v
+                    tau_ion_HeII = nbHeII*(1+z)**3*cs.HeII_ex_e(electrons[i]*6.24e11)*v
 
                     sigma_IC = np.zeros(len(Eg_list))
                     total_probability = 0
@@ -153,26 +153,40 @@ for i_E in range(0, len(E0_list)):
                             total_probability += probability
                             photons_particles_total_add += temp
 
-                    if electrons[i] > 1e5/6.24e11:
+                    if electrons[i] > 1e2/6.24e11:
                         # Approximate mode
                         # tau = precision*min([1./tau_ex, 1./tau_ion, tau_IC, electrons[i]/eedEdt_now])
                         secondary_energy = cs.rhoE(np.array([electrons[i]]), 8.0/6.24e11)[0]
-                        energy_to_distribute = electrons[i] * precision
-                        e_to_ex = tau_ex * 10.2 / 6.24e11
-                        e_to_ion = tau_ion * 13.6 / 6.24e11
-                        e_to_sec = tau_ion * secondary_energy
+                        energy_to_distribute = electrons[i] * 0.1
+                        e_to_ion = tau_ion * cs.const_HI_ion / 6.24e11
+                        e_to_ex = tau_ex * cs.const_HI_ex / 6.24e11
+                        e_to_ion_HeI = tau_ion_HeI * cs.const_HeI_ion / 6.24e11
+                        e_to_ex_HeI = tau_ex_HeI * cs.const_HeI_ex / 6.24e11
+                        e_to_ion_HeII = tau_ion_HeII * cs.const_HeII_ion / 6.24e11
+                        e_to_ex_HeII = tau_ex_HeII * cs.const_HeII_ex / 6.24e11
+                        e_to_sec = (tau_ion+tau_ion_HeI+tau_ion_HeII) * secondary_energy
                         e_to_ee = eedEdt_now
                         e_to_ic = total_probability
-                        e_factor = energy_to_distribute / (e_to_ee+e_to_ex+e_to_ion+e_to_ic+e_to_sec)
+                        e_factor = energy_to_distribute / (e_to_ee+e_to_ex+e_to_ion+e_to_ic+e_to_sec+\
+                                                           e_to_ion_HeI+e_to_ion_HeII+
+                                                           e_to_ex_HeI+e_to_ex_HeII)
                         e_to_ex *= e_factor
                         e_to_ion *= e_factor
+                        e_to_ex_HeI *= e_factor
+                        e_to_ion_HeI *= e_factor
+                        e_to_ex_HeII *= e_factor
+                        e_to_ion_HeII *= e_factor
                         e_to_ee *= e_factor
                         e_to_ic *= e_factor
                         e_to_sec *= e_factor
                         coll_ex += e_to_ex
+                        coll_ion += e_to_ion
+                        coll_ex_HeI += e_to_ex_HeI
+                        coll_ion_HeI += e_to_ion_HeI
+                        coll_ex_HeII += e_to_ex_HeII
+                        coll_ion_HeII += e_to_ion_HeII
                         coll_loss += e_to_ee
                         IC_total += e_to_ic
-                        coll_ion += e_to_ion
                         photons_particles += photons_particles_total_add*e_factor
                         e_factor_int = np.floor(e_to_sec / secondary_energy)
                         # print electrons[i]*6.24e11, energy_to_distribute*6.24e11
@@ -194,39 +208,40 @@ for i_E in range(0, len(E0_list)):
                         # if electrons[i] > 1e5/6.24e11:
                         #     print total_probability, np.sum(photons_particles_total_add*Eg_list)
                         rand_a = np.random.rand(10)
-                        if electrons[i] > 10.2 / 6.24e11:
+                        if electrons[i] > cs.const_HI_ex / 6.24e11:
                             if rand_a[0] < tau_ex*tau:
-                                electrons[i] -= 10.2 / 6.24e11
-                                coll_ex += 10.2 / 6.24e11
-                        if electrons[i] > 20.0 / 6.24e11:
+                                electrons[i] -= cs.const_HI_ex / 6.24e11
+                                coll_ex += cs.const_HI_ex / 6.24e11
+                        if electrons[i] > cs.const_HeI_ex / 6.24e11:
                             if rand_a[1] < tau_ex_HeI*tau:
-                                electrons[i] -= 20.0 / 6.24e11
-                                coll_ex_HeI += 20.0 / 6.24e11
-                        if electrons[i] > 41.0 / 6.24e11:
+                                electrons[i] -= cs.const_HeI_ex / 6.24e11
+                                coll_ex_HeI += cs.const_HeI_ex / 6.24e11
+                        if electrons[i] > cs.const_HeII_ex / 6.24e11:
                             if rand_a[2] < tau_ex_HeII*tau:
-                                electrons[i] -= 41.0 / 6.24e11
-                                coll_ex_HeII += 41.0 / 6.24e11
-                        if electrons[i] > 13.6 / 6.24e11:
+                                electrons[i] -= cs.const_HeII_ex / 6.24e11
+                                coll_ex_HeII += cs.const_HeII_ex / 6.24e11
+                        if electrons[i] > cs.const_HI_ion / 6.24e11:
                             if rand_a[3] < tau_ion*tau:
                                 temp = cs.rhoE(np.array([electrons[i]]), 8.0/6.24e11)[0]
-                                electrons[i] -= 13.6 / 6.24e11
+                                electrons[i] -= cs.const_HI_ion / 6.24e11
                                 electrons[i] = electrons[i]-temp
                                 electrons = np.append(electrons, temp)
-                                coll_ion += 13.6 / 6.24e11
-                        if electrons[i] > 24.6 / 6.24e11:
+                                coll_ion += cs.const_HI_ion / 6.24e11
+                        if electrons[i] > cs.const_HeI_ion / 6.24e11:
                             if rand_a[4] < tau_ion_HeI*tau:
                                 temp = cs.rhoE(np.array([electrons[i]]), 8.0/6.24e11)[0]
-                                electrons[i] -= 24.6 / 6.24e11
+                                electrons[i] -= cs.const_HeI_ion / 6.24e11
                                 electrons[i] = electrons[i]-temp
                                 electrons = np.append(electrons, temp)
-                                coll_ion_HeI += 24.6 / 6.24e11
-                        if electrons[i] > 54.4 / 6.24e11:
+                                coll_ion_HeI += cs.const_HeI_ion / 6.24e11
+                        if electrons[i] > cs.const_HeII_ion / 6.24e11:
+                            # print tau_ion_HeII*tau, tau_ion*tau
                             if rand_a[5] < tau_ion_HeII*tau:
                                 temp = cs.rhoE(np.array([electrons[i]]), 8.0/6.24e11)[0]
-                                electrons[i] -= 54.4 / 6.24e11
+                                electrons[i] -= cs.const_HeII_ion / 6.24e11
                                 electrons[i] = electrons[i]-temp
                                 electrons = np.append(electrons, temp)
-                                coll_ion_HeII += 54.4 / 6.24e11
+                                coll_ion_HeII += cs.const_HeII_ion / 6.24e11
                         if electrons[i] > eedEdt_now * tau:
                             electrons[i] -= eedEdt_now * tau
                             coll_loss += eedEdt_now * tau
@@ -290,9 +305,13 @@ plt.plot(E0_list, results['IC'], '-')
 # plt.plot(E0_list, results[:, 3])
 plt.xscale('log')
 plt.yscale('log')
-plt.plot(E0_list, results['H_I_ion']+results['H_I_ex']+results['He_I_ion']+results['He_I_ex']+results['He_II_ion']+results['He_II_ex']+results['ee'], '--k')
+plt.plot(E0_list, results['H_I_ion']+results['H_I_ex']+
+                  results['He_I_ion']+results['He_I_ex']+
+                  results['He_II_ion']+results['He_II_ex']+results['ee'], '--k')
 plt.plot(E0_list, results['IC'], '-')
+plt.plot(E0_list, results['IC']+results['H_I_ion']+results['H_I_ex']+results['He_I_ion']+results['He_I_ex']+results['He_II_ion']+results['He_II_ex']+results['ee'], '--k')
 plt.plot([1e1,1e2,1e3,1e4,1e5,1e6], [0,0,0,0.35,0.85,1.0],'o')
 plt.xscale('log')
 plt.xlabel(r'$E\;\mathrm{[eV]}$')
+plt.show()
 

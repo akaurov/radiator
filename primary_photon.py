@@ -367,7 +367,7 @@ Interaction_fraction_H = E_ph_interaction_list.copy() * 0.0
 Interaction_fraction_He = E_ph_interaction_list.copy() * 0.0
 for i in range(len(E_ph_interaction_list)):
     print i
-    results350 = runsim(E_ph_interaction_list[i], 50, bins=bins)
+    results350 = runsim(E_ph_interaction_list[i], 15, bins=bins)
     Interaction_fraction[i] = np.sum(results350[3])/total_mocks/E_ph_interaction_list[i]
     Interaction_fraction_H[i] = np.sum(results350[4])/total_mocks/E_ph_interaction_list[i]
     Interaction_fraction_He[i] = np.sum(results350[5])/total_mocks/E_ph_interaction_list[i]

@@ -249,6 +249,17 @@ class cross_sections:
         if self.cs['collex'] == 'RBEQ':
             return self.sigmaRBEQ(E, 21.2, 0.5, 1./10.0)
 
+    def HeII_ex_e(self, E):
+        '''
+        HeI excitation with an electron.
+        :param E: the energy of the electron
+        :return: cross section in cm^-2
+        '''
+        if self.cs['collex'] == 'SKD':
+            return self.sigma_SKD(E, mode='HeI')
+        if self.cs['collex'] == 'RBEQ':
+            return self.sigmaRBEQ(E, 40.82, 0.5, 1./10.0)
+
     def eedEdt(self, E, ne, T):
         '''
         Rate of energy loss of an electron with energy E in electron plasma with density ne and temperature T
