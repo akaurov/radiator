@@ -29,7 +29,7 @@ T_CMB = 2.73*(1+z)
 xiH = float(sys.argv[3])
 nb = cosmolopy.cden.baryon_densities(**cosmolopy.fidcosmo)[0] / cosmolopy.constants.Mpc_cm**3 * cosmolopy.constants.M_sun_g / cosmolopy.constants.m_p_g * 0.04
 nb *= (1.0+delta)
-T = 10**4
+T = 4e4
 precision = 0.01
 accurate_cmb = False
 cs = cross_sections(cs={'photion': sys.argv[4], 'collion': sys.argv[5], 'collex': sys.argv[6]})
@@ -85,13 +85,13 @@ for i_E in range(0, len(E0_list)):
     E0 = E0_list[i_E]
 
     if E0 < 1e2:
-        MC_N = 100
+        MC_N = 1000
         precision = 0.01
-    elif E0 < 1e3:
+    elif E0 < 1e5:
         MC_N = 100
         precision = 0.01
     else:
-        MC_N = 100
+        MC_N = 1
         precision = 0.01
 
     MC_N_list[i_E] = MC_N
@@ -153,10 +153,11 @@ for i_E in range(0, len(E0_list)):
                             total_probability += probability
                             photons_particles_total_add += temp
 
-                    if electrons[i] > 1e2/6.24e11:
+                    if electrons[i] > 1e5/6.24e11:
                         # Approximate mode
                         # tau = precision*min([1./tau_ex, 1./tau_ion, tau_IC, electrons[i]/eedEdt_now])
-                        secondary_energy = cs.rhoE(np.array([electrons[i]]), 8.0/6.24e11)[0]
+                        rhoE_list = cs.rhoE(np.ones(1000)*electrons[i], 8.0/6.24e11)
+                        secondary_energy = np.mean(rhoE_list)
                         energy_to_distribute = electrons[i] * 0.1
                         e_to_ion = tau_ion * cs.const_HI_ion / 6.24e11
                         e_to_ex = tau_ex * cs.const_HI_ex / 6.24e11
@@ -167,7 +168,7 @@ for i_E in range(0, len(E0_list)):
                         e_to_sec = (tau_ion+tau_ion_HeI+tau_ion_HeII) * secondary_energy
                         e_to_ee = eedEdt_now
                         e_to_ic = total_probability
-                        e_factor = energy_to_distribute / (e_to_ee+e_to_ex+e_to_ion+e_to_ic+e_to_sec+\
+                        e_factor = energy_to_distribute / (e_to_ee+e_to_ex+e_to_ion+e_to_ic+e_to_sec+
                                                            e_to_ion_HeI+e_to_ion_HeII+
                                                            e_to_ex_HeI+e_to_ex_HeII)
                         e_to_ex *= e_factor
@@ -189,9 +190,18 @@ for i_E in range(0, len(E0_list)):
                         IC_total += e_to_ic
                         photons_particles += photons_particles_total_add*e_factor
                         e_factor_int = np.floor(e_to_sec / secondary_energy)
+                        print e_factor_int
+                        if e_factor_int < 1:
+                            e_factor_int = 1.0
                         # print electrons[i]*6.24e11, energy_to_distribute*6.24e11
                         electrons[i] -= energy_to_distribute
-                        electrons = np.append(electrons, np.ones(e_factor_int)*e_to_sec/e_factor_int)
+                        # print energy_to_distribute/(e_to_ex+e_to_ion+e_to_ex_HeI+e_to_ion_HeI+e_to_ex_HeII+e_to_ion_HeII+e_to_ic+e_to_ee)
+                        # print energy_to_distribute/(e_to_ee+e_to_ex+e_to_ion+e_to_ic+e_to_sec+
+                        #                                    e_to_ion_HeI+e_to_ion_HeII+
+                        #                                    e_to_ex_HeI+e_to_ex_HeII)
+                        secondary_electrons_list = rhoE_list[np.random.randint(1000, size=e_factor_int)]
+                        secondary_electrons_list *= e_to_sec/np.sum(secondary_electrons_list)
+                        electrons = np.hstack([electrons, secondary_electrons_list])
                     else:
                         tau_IC = electrons[i] / total_probability
                         if electrons[i] > 1e5/6.24e11:
@@ -253,7 +263,7 @@ for i_E in range(0, len(E0_list)):
                     electrons[i] = 0
             # interpolation mode
             # inter_mask = np.where(electrons < E0_list[i_E-1]/6.24e11)[0]
-            inter_mask = np.where((electrons < E0_list[i_E-1]/6.24e11) & (electrons < 1e3/6.24e11))[0]# & (electrons < Eth_IC/6.24e11))[0]
+            inter_mask = np.where((electrons < E0_list[i_E-1]/6.24e11) & (electrons < 1e5/6.24e11))[0]# & (electrons < Eth_IC/6.24e11))[0]
             IC_total_frac = np.interp(electrons[inter_mask], E0_list/6.24e11, results['IC'])
             # IC_soft_frac = np.interp(electrons[inter_mask], E0_list/6.24e11, results[:, 4])
             # IC_hard_frac = np.interp(electrons[inter_mask], E0_list/6.24e11, results[:, 5])

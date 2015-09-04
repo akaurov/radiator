@@ -352,5 +352,5 @@ class cross_sections:
         r = np.random.rand(len(E))
         ei_mod = ei+np.log10(E*6.24e11/100)*2/6.24e11
         temp = np.tan(r*np.pi/2.0)*(ei*(1+np.log10(E*6.24e11/ei_mod)))
-        temp[temp > E/2.0] = E/2.0
+        temp[temp > E/2.0] = E[temp > E/2.0]/2.0
         return temp
