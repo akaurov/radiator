@@ -359,7 +359,7 @@ plt.plot(z_list, np.cumsum(E_redshift_total61100)/total_mocks/1e6, 'k--', lw=1)
 
 
 bins=100
-total_mocks=1000
+total_mocks=10000
 
 E_ph_interaction_list = np.concatenate([np.logspace(np.log10(13.61), 2, 100)[:-1], np.logspace(2, 12, 30)])
 Interaction_fraction = E_ph_interaction_list.copy() * 0.0
@@ -367,7 +367,7 @@ Interaction_fraction_H = E_ph_interaction_list.copy() * 0.0
 Interaction_fraction_He = E_ph_interaction_list.copy() * 0.0
 for i in range(len(E_ph_interaction_list)):
     print i
-    results350 = runsim(E_ph_interaction_list[i], 15, bins=bins)
+    results350 = runsim(E_ph_interaction_list[i], 30, bins=bins)
     Interaction_fraction[i] = np.sum(results350[3])/total_mocks/E_ph_interaction_list[i]
     Interaction_fraction_H[i] = np.sum(results350[4])/total_mocks/E_ph_interaction_list[i]
     Interaction_fraction_He[i] = np.sum(results350[5])/total_mocks/E_ph_interaction_list[i]

@@ -86,13 +86,13 @@ for i_E in range(0, len(E0_list)):
     E0 = E0_list[i_E]
 
     if E0 < 1e2:
-        MC_N = 1000
-        precision = 0.01
-    elif E0 < 1e5:
         MC_N = 100
         precision = 0.01
-    else:
+    elif E0 < 1e5:
         MC_N = 10
+        precision = 0.01
+    else:
+        MC_N = 1
         precision = 0.01
 
     MC_N_list[i_E] = MC_N
