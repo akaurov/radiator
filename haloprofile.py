@@ -1,11 +1,11 @@
 __author__ = 'A'
 
-import colossus as cl
+from colossus.Cosmology import *
 import numpy as np
 import matplotlib.pyplot as plt
 
-cl.Cosmology.setCosmology('planck13')
-cosmo = cl.Cosmology.getCurrent()
+setCosmology('planck13')
+cosmo = Cosmology.getCurrent()
 
 M = 1e-12
 z = 100
