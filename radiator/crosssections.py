@@ -26,7 +26,7 @@ class cross_sections:
     sigmaT = 6.6524e-25 #cm^2
     me = 9.109e-28 # g
     c = 2.9979e10 # cm/s
-    #hbar = 4.135668e-15/2.0/np.pi # eV*s
+    # hbar = 4.135668e-15/2.0/np.pi # eV*s
     hbar = 1.0545e-27 # erg*s
     kB = 1.380648e-16 # erg/K
 
@@ -36,7 +36,7 @@ class cross_sections:
     const_HeI_ex = 21.22
     const_HeII_ion = 54.41776
     const_HeII_ex = 40.82
-    #
+
     # Photoionization cross sections
     #
     # http://adsabs.harvard.edu/abs/1996ApJ...465..487V
