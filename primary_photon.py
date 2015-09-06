@@ -2,11 +2,8 @@ __author__ = 'kaurov'
 import numpy as np
 import matplotlib.pyplot as plt
 from radiator.figurestyle import *
-# from rstat.crossections import sigmaH
 define_figure_style()
 # http://arxiv.org/pdf/0807.1969.pdf
-
-
 
 from radiator.crosssections import *
 
