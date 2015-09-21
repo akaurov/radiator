@@ -1,7 +1,7 @@
 # RADIATOR
 Python MC code for simulating the energy dissipation of an electron in cosmological environment during the epoch of cosmic reionization.
 
-This code is accompanying the letter (submitted to ApJL). 
+This code is accompanying the letter (submitted to ApJ). 
 
 ## Cross sections (atomic processes)
 You can see comparison in this iPython notebook:
