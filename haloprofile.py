@@ -9,8 +9,8 @@ import matplotlib.pyplot as plt
 setCosmology('planck13')
 cosmo = getCurrent()
 
-M = 1e-6
-z = 100
+M = 1e-3
+z = 30
 c = concentration(M, 'vir', z, model='diemer15')
 print np.log10(M), z, c
 delta_list = np.logspace(0, 8, 33)
@@ -25,9 +25,9 @@ V[1:] -= V[:-1]
 rho2V = rho**2*V
 rho2V /= rho2V.sum()
 
-plt.plot(R, rho)
-plt.xscale('log')
-plt.yscale('log')
+# plt.plot(R, rho)
+# plt.xscale('log')
+# plt.yscale('log')
 
 plt.hist(rho, bins=delta_list, weights=rho2V, histtype='step',)
 plt.xscale('log')
