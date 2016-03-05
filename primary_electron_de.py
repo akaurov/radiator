@@ -6,6 +6,9 @@ import numpy as np
 import cosmolopy
 import matplotlib.pyplot as plt
 
+from multiprocessing import Pool
+n_proc = 4
+
 from radiator.figurestyle import *
 define_figure_style()
 # http://arxiv.org/pdf/0807.1969.pdf
@@ -21,7 +24,8 @@ hbar = 1.0545e-27 # erg*s
 kB = 1.380648e-16 # erg/K
 
 # Do electrons-photons interactions
-E0_list = np.logspace(1, 12, 250)
+# E0_list = np.logspace(1, 12, 250)
+E0_list = np.logspace(1, 2, 5)
 E_extr_thresh = 1e12
 z = float(sys.argv[1])
 Eth_IC = 1e3
@@ -81,15 +85,17 @@ results = np.zeros(len(E0_list), dtype=([('H_I_ion', 'f4'), ('H_I_ex', 'f4'),
                                          ('IC', 'f4')]))
 MC_N_list = np.zeros([len(E0_list)])
 
+
+
 for i_E in range(0, len(E0_list)):
     print i_E
     E0 = E0_list[i_E]
 
     if E0 < 1e2:
-        MC_N = 100
+        MC_N = 1000
         precision = 0.01
     elif E0 < 1e5:
-        MC_N = 10
+        MC_N = 100
         precision = 0.01
     else:
         MC_N = 1
