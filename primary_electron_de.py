@@ -25,7 +25,7 @@ kB = 1.380648e-16 # erg/K
 
 # Do electrons-photons interactions
 # E0_list = np.logspace(1, 12, 250)
-E0_list = np.logspace(1, 2, 5)
+E0_list = np.logspace(1, 12, 1000)
 E_extr_thresh = 1e12
 z = float(sys.argv[1])
 Eth_IC = 1e3
